@@ -163,7 +163,7 @@ export const INITIAL_LAYERS: GISLayer[] = [
       {
         distanceMeters: 1000,
         label: 'Szczytowe Opadanie Pętli Ciepła (500 m - 1 km)',
-        valueText: '+0,80 K',
+        valueText: '+0,80°C',
         color: '#c2410c',
         fillColor: '#ea580c',
         description: 'Mieszanie i opadanie pętli ciepłego powietrza na przyległe tereny.'
@@ -171,7 +171,7 @@ export const INITIAL_LAYERS: GISLayer[] = [
       {
         distanceMeters: 2000,
         label: 'Zauważalny Zasięg Mikroklimatu (1 km - 2 km)',
-        valueText: '+0,58 K (>0,5°C do 1,5-2 km)',
+        valueText: '+0,58°C (>0,5°C do 1,5-2 km)',
         color: '#d97706',
         fillColor: '#f59e0b',
         description: 'Zasięg morfologiczny zauważalnej modyfikacji mikroklimatu lokalnego.'
@@ -179,7 +179,7 @@ export const INITIAL_LAYERS: GISLayer[] = [
       {
         distanceMeters: 5000,
         label: 'Śladowe Oddziaływanie Tła (2 km - 5 km)',
-        valueText: '+0,24 K (na 5 km)',
+        valueText: '+0,24°C (na 5 km)',
         color: '#ca8a04',
         fillColor: '#eab308',
         description: 'Graniczny sygnał termiczny miesza się z naturalnymi wahaniami tła klimatycznego.'

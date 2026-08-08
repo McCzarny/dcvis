@@ -51,10 +51,10 @@ export function getResidentialBuildings(): ResidentialBuilding[] {
     else if (distBoundaryMeters <= 1600) noiseGen = '45-60 dBA (Wyraźnie słyszalny wydech silników)';
     else noiseGen = '< 45 dBA (Słabe tło)';
 
-    let tempRise = '+0,24 K (Śladowe)';
+    let tempRise = '+0,24°C (Śladowe)';
     if (distBoundaryMeters <= 300) tempRise = '+1,5°C ÷ +2,5°C (Płaskowyż termiczny)';
-    else if (distBoundaryMeters <= 1000) tempRise = '+0,80 K (Odczuwalna wyspa ciepła)';
-    else if (distBoundaryMeters <= 2000) tempRise = '+0,58 K (Modyfikacja mikroklimatu)';
+    else if (distBoundaryMeters <= 1000) tempRise = '+0,80°C (Odczuwalna wyspa ciepła)';
+    else if (distBoundaryMeters <= 2000) tempRise = '+0,58°C (Modyfikacja mikroklimatu)';
 
     return {
       id: `res_building_${index + 1}`,
