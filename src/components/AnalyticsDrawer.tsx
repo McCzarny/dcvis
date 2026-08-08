@@ -39,7 +39,7 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
       <div className="w-full max-w-4xl max-h-[90vh] glass-panel rounded-3xl flex flex-col shadow-2xl overflow-hidden border border-slate-700/80">
         {/* Header */}
         <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/80">
@@ -73,7 +73,7 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
               className={`px-4 py-2.5 rounded-t-xl text-xs font-bold flex items-center space-x-2 border-t border-x transition-all ${
                 activeTab === 'noise'
                   ? 'bg-slate-900 text-rose-400 border-slate-700 shadow-md'
-                  : 'text-slate-400 border-transparent hover:text-slate-200'
+                  : 'text-slate-200 border-transparent hover:text-slate-100 bg-slate-800/30'
               }`}
             >
               <Volume2 className="w-4 h-4" />
@@ -85,7 +85,7 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
               className={`px-4 py-2.5 rounded-t-xl text-xs font-bold flex items-center space-x-2 border-t border-x transition-all ${
                 activeTab === 'thermal'
                   ? 'bg-slate-900 text-amber-400 border-slate-700 shadow-md'
-                  : 'text-slate-400 border-transparent hover:text-slate-200'
+                  : 'text-slate-200 border-transparent hover:text-slate-100 bg-slate-800/30'
               }`}
             >
               <Thermometer className="w-4 h-4" />
