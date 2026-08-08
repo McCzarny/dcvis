@@ -21,10 +21,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             <h1 className="font-bold text-base md:text-lg tracking-tight text-white">
               Data Center Domiechowice
             </h1>
-            <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/40">
-              <ShieldAlert className="w-3.5 h-3.5 mr-1 text-rose-400" />
-              Zawieszono OOŚ (27.05.2026)
-            </span>
           </div>
           <p className="text-xs text-slate-400 font-medium hidden md:block">
             Geoportal GIS i Analiza Oddziaływania Środowiskowego (Gmina Bełchatów)
