@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 512 512"
+   width="100%"
+   height="100%"
+   version="1.1"
+   id="svg23"
+   sodipodi:docname="favicon.svg"
+   inkscape:version="1.4.4 (dcaf3e7, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview23"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.88990586"
+     inkscape:cx="197.77373"
+     inkscape:cy="270.25331"
+     inkscape:window-width="1512"
+     inkscape:window-height="836"
+     inkscape:window-x="0"
+     inkscape:window-y="33"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg23" />
+  <defs
+     id="defs7">
+    <!-- Background Gradient -->
+    <linearGradient
+       id="bgGrad"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#0F172A"
+         id="stop1" />
+      <stop
+         offset="100%"
+         stop-color="#1E293B"
+         id="stop2" />
+    </linearGradient>
+    <!-- Pin Accent Gradient -->
+    <linearGradient
+       id="pinGrad"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#38BDF8"
+         id="stop3" />
+      <stop
+         offset="100%"
+         stop-color="#0284C7"
+         id="stop4" />
+    </linearGradient>
+    <!-- Server Face Gradient -->
+    <linearGradient
+       id="serverGrad"
+       x1="133.98542"
+       y1="86.516877"
+       x2="133.98542"
+       y2="362.99472"
+       gradientTransform="scale(0.9404008,1.0633763)"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0"
+         stop-color="#1E293B"
+         id="stop5"
+         style="stop-color:#76a1e8;stop-opacity:1;" />
+      <stop
+         offset="1"
+         stop-color="#0F172A"
+         id="stop6"
+         style="stop-color:#4b72d2;stop-opacity:1;" />
+    </linearGradient>
+    <!-- Glow Effect -->
+    <filter
+       id="glow"
+       x="-1.8"
+       y="-1.8"
+       width="4.6"
+       height="4.6">
+      <feGaussianBlur
+         stdDeviation="12"
+         result="blur"
+         id="feGaussianBlur6" />
+      <feComposite
+         in="SourceGraphic"
+         in2="blur"
+         operator="over"
+         id="feComposite6" />
+    </filter>
+    <filter
+       id="subtleGlow"
+       x="-0.00015520577"
+       y="-0.00013640619"
+       width="1.0003104"
+       height="1.0002728">
+      <feGaussianBlur
+         stdDeviation="0.02017675"
+         result="blur"
+         id="feGaussianBlur7" />
+      <feComposite
+         in="SourceGraphic"
+         in2="blur"
+         operator="over"
+         id="feComposite7" />
+    </filter>
+  </defs>
+  <!-- Canvas Base -->
+  <!-- Map Grid & Network Lines -->
+  <!-- Network Map Nodes -->
+  <!-- Pulse Base Ring -->
+  <!-- Map Location Pin -->
+  <path
+     d="m 256,70 c -96,0 -156,65 -156,160 0,90 120,175 156,195 C 292,405 412,320 412,230 412,135 352,70 256,70 Z"
+     fill="url(#pinGrad)"
+     filter="url(#subtleGlow)"
+     id="path13"
+     style="mix-blend-mode:normal;fill:#282c37;fill-opacity:1;stroke-width:0.693359;filter:url(#subtleGlow)"
+     transform="matrix(1.4422535,0,0,1.4422535,-105.74648,-100.95774)" />
+  <!-- Inner Server Bay Cutout -->
+  <path
+     d="m 263.47041,31.729574 c -112.49577,0 -187.49295,76.439436 -187.49295,187.492946 0,105.2845 141.34084,210.56901 187.49295,236.52956 46.1521,-25.96055 187.49294,-131.24506 187.49294,-236.52956 0,-111.05351 -74.99718,-187.492946 -187.49294,-187.492946 z"
+     fill="url(#serverGrad)"
+     id="path14"
+     style="fill:url(#serverGrad);stroke-width:0.999999" />
+  <!-- Server Blades (Data Center Racks) -->
+  <!-- Blade 1 -->
+  <rect
+     x="125.01408"
+     y="100.95773"
+     width="276.91266"
+     height="60.574646"
+     rx="7.999999"
+     fill="#334155"
+     id="rect14"
+     style="stroke-width:0.999999"
+     ry="7.999999" />
+  <rect
+     x="133.66759"
+     y="109.61126"
+     width="259.60562"
+     height="43.267605"
+     rx="5"
+     fill="#0f172a"
+     id="rect15"
+     style="stroke-width:0.999999"
+     ry="5" />
+  <circle
+     cx="159.62816"
+     cy="131.24507"
+     fill="#10b981"
+     id="circle15"
+     r="7.211267"
+     style="stroke-width:0.999999" />
+  <circle
+     cx="182.70421"
+     cy="131.24507"
+     fill="#38bdf8"
+     id="circle16"
+     r="7.211267"
+     style="stroke-width:0.999999" />
+  <line
+     x1="211.54929"
+     y1="131.24507"
+     x2="341.35208"
+     y2="131.24507"
+     stroke="#475569"
+     stroke-width="3.99999"
+     stroke-linecap="round"
+     id="line16" />
+  <rect
+     x="358.65915"
+     y="119.70702"
+     width="23.076056"
+     height="23.076056"
+     rx="3"
+     fill="#0284c7"
+     id="rect16"
+     style="stroke-width:0.999999"
+     ry="3" />
+  <!-- Blade 2 -->
+  <rect
+     x="125.01408"
+     y="181.72394"
+     width="276.91266"
+     height="60.574646"
+     rx="7.999999"
+     fill="#334155"
+     id="rect17"
+     style="stroke-width:0.999999"
+     ry="7.999999" />
+  <rect
+     x="133.66759"
+     y="190.37746"
+     width="259.60562"
+     height="43.267605"
+     rx="5"
+     fill="#0f172a"
+     id="rect18"
+     style="stroke-width:0.999999"
+     ry="5" />
+  <circle
+     cx="159.62816"
+     cy="212.01125"
+     fill="#10b981"
+     id="circle18"
+     r="7.211267"
+     style="stroke-width:0.999999" />
+  <circle
+     cx="182.70421"
+     cy="212.01125"
+     fill="#10b981"
+     id="circle19"
+     r="7.211267"
+     style="stroke-width:0.999999" />
+  <line
+     x1="211.54929"
+     y1="212.01125"
+     x2="341.35208"
+     y2="212.01125"
+     stroke="#475569"
+     stroke-width="3.99999"
+     stroke-linecap="round"
+     id="line19" />
+  <rect
+     x="358.65915"
+     y="200.47324"
+     width="23.076056"
+     height="23.076056"
+     rx="3"
+     fill="#0284c7"
+     id="rect19"
+     style="stroke-width:0.999999"
+     ry="3" />
+  <!-- Blade 3 -->
+  <rect
+     x="125.01408"
+     y="262.49014"
+     width="276.91266"
+     height="60.574646"
+     rx="7.999999"
+     fill="#334155"
+     id="rect20"
+     style="stroke-width:0.999999"
+     ry="7.999999" />
+  <rect
+     x="133.66759"
+     y="271.14365"
+     width="259.60562"
+     height="43.267605"
+     rx="5"
+     fill="#0f172a"
+     id="rect21"
+     style="stroke-width:0.999999"
+     ry="5" />
+  <circle
+     cx="159.62816"
+     cy="292.77747"
+     fill="#f59e0b"
+     id="circle21"
+     r="7.211267"
+     style="stroke-width:0.999999" />
+  <circle
+     cx="182.70421"
+     cy="292.77747"
+     fill="#38bdf8"
+     id="circle22"
+     r="7.211267"
+     style="stroke-width:0.999999" />
+  <line
+     x1="211.54929"
+     y1="292.77747"
+     x2="341.35208"
+     y2="292.77747"
+     stroke="#475569"
+     stroke-width="3.99999"
+     stroke-linecap="round"
+     id="line22" />
+  <rect
+     x="358.65915"
+     y="281.23941"
+     width="23.076056"
+     height="23.076056"
+     rx="3"
+     fill="#0284c7"
+     id="rect22"
+     style="stroke-width:0.999999"
+     ry="3" />
+  <!-- Active Node Core -->
+</svg>
