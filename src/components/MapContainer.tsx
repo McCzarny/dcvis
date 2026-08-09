@@ -115,7 +115,7 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
 
   // Dane zabudowań mieszkalnych
   const residentialBuildings = useMemo(() => getResidentialBuildings(), []);
-  const dcCenterCoord: [number, number] = [51.3662, 19.3135];
+  const dcCenterCoord: [number, number] = [51.367, 19.314];
 
   // Bufory hałasu ciągłego
   const noiseContLayer = layers.find((l) => l.id === 'noise_continuous_buffers');

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, FileText, AlertTriangle, ShieldCheck, Zap, Droplets, Landmark, ExternalLink } from 'lucide-react';
+import { X, FileText, AlertTriangle, ShieldCheck, Zap, Droplets, Landmark } from 'lucide-react';
 import { DATA_CENTER_SPECS } from '../data/layersRegistry';
 
 interface ProjectDocsModalProps {

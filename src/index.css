@@ -2,11 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-slate-900 text-slate-900 font-sans antialiased overflow-hidden;
-  }
-}
+
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
@@ -91,7 +87,7 @@
 .archeo-custom-marker {
   display: flex;
   align-items: center;
-  justify-center: center;
+  justify-content: center;
 }
 
 /* Permanent Tooltip / Label for Data Center Area */

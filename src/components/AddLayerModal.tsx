@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, PlusCircle, Code, Palette, Tag } from 'lucide-react';
+import { X, PlusCircle } from 'lucide-react';
 import { GISLayer, LayerCategory } from '../types/gis';
 
 interface AddLayerModalProps {

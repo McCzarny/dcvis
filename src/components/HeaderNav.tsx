@@ -1,5 +1,5 @@
 import React from 'react';
-import { Server, BarChart2, ShieldAlert } from 'lucide-react';
+import { Server, BarChart2 } from 'lucide-react';
 import { DATA_CENTER_SPECS } from '../data/layersRegistry';
 
 interface HeaderNavProps {
