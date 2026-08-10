@@ -53,7 +53,7 @@ export const INITIAL_LAYERS: GISLayer[] = [
     id: 'noise_continuous_buffers',
     name: 'Hałas Ciągły Wentylatorów (Chillers)',
     category: 'akustyka',
-    description: 'Spadek natężenia dźwięku urządzeń chłodzących w porze dziennej i nocnej.',
+    description: 'Model 1/r^1.5 z odbiciami gruntowymi i atmosferycznymi. Źródło: 65 dBA w odległości 152,4 m (500 stóp). Spadek ~4,5 dB przy każdym podwojeniu odległości.',
     visible: true,
     opacity: 0.4,
     color: '#ea580c', // orange-600
@@ -61,61 +61,65 @@ export const INITIAL_LAYERS: GISLayer[] = [
     type: 'buffer_ring',
     buffers: [
       {
-        distanceMeters: 15,
-        label: 'Otoczenie Wentylatorów (15 m)',
-        valueText: '70 - 85 dBA',
+        distanceMeters: 150,
+        label: 'Źródło Hałasu (150 m / 500 stóp)',
+        valueText: '~65 dBA',
         color: '#b91c1c',
         fillColor: '#dc2626',
-        description: 'Bezpośrednie sąsiedztwo czerpni i wyrzutni powietrza.'
+        description: 'Poziom źródłowy hałasu wentylatorów w odległości 500 stóp (152,4 m).'
       },
       {
-        distanceMeters: 60,
-        label: 'Strefa Bliska (60 m / 200 ft)',
-        valueText: '60 dBA',
+        distanceMeters: 250,
+        label: 'Strefa Wysokiego Hałasu (250 m)',
+        valueText: '61,8 dBA',
         color: '#c2410c',
         fillColor: '#ea580c',
-        description: 'Spadek poziomu dźwięku do ok. 60 dBA.'
-      },
-      {
-        distanceMeters: 240,
-        label: 'Przekroczenie Normy Nocnej (240 m)',
-        valueText: '50 dBA (+10 dB przekroczenia)',
-        color: '#d97706',
-        fillColor: '#f59e0b',
-        description: 'Przekroczenie dopuszczalnej normy nocnej dla zabudowy jednorodzinnej o 10 dB.'
+        description: 'Typowa praca centrum danych. Przekroczenie normy nocnej o 21,8 dB, dziennej o 11,8 dB.'
       },
       {
         distanceMeters: 500,
-        label: 'Spadek Natężenia (500 m)',
-        valueText: '45 dBA',
+        label: 'Strefa Podwyższonego Hałasu (500 m)',
+        valueText: '57,3 dBA',
+        color: '#d97706',
+        fillColor: '#f59e0b',
+        description: 'Przekroczenie normy nocnej (40 dBA) o 17,3 dB. Przekroczenie normy dziennej (50 dBA) o 7,3 dB.'
+      },
+      {
+        distanceMeters: 1000,
+        label: 'Strefa Umiarkowanego Hałasu (1000 m)',
+        valueText: '52,7 dBA',
         color: '#ca8a04',
         fillColor: '#eab308',
-        description: 'Spadek natężenia dźwięku ciągłego do 45 dBA.'
+        description: 'Przekroczenie normy nocnej o 12,7 dB. Nieznacznie powyżej normy dziennej.'
       },
       {
-        distanceMeters: 800,
-        label: 'Formalna Norma Nocna (800 m / 0,5 mili)',
-        valueText: '40 dBA (Limit nocny)',
+        distanceMeters: 2000,
+        label: 'Strefa Obniżonego Hałasu (2000 m)',
+        valueText: '48,2 dBA',
         color: '#65a30d',
         fillColor: '#84cc16',
-        description: 'Granica dopuszczalnego poziomu hałasu w nocy dla zabudowy jednorodzinnej (40 dBA).'
+        description: 'Poniżej normy dziennej (50 dBA). Wciąż przekracza normę nocną (40 dBA) o 8,2 dB.'
       },
       {
-        distanceMeters: 1500,
-        label: 'Słyszalność Niskich Częstotliwości (1500 m)',
-        valueText: 'Niski Hum w nocy',
+        distanceMeters: 3200,
+        label: 'Zasięg Niskich Częstotliwości (3,2–4 km)',
+        valueText: '~45 dBA',
         color: '#7e22ce',
         fillColor: '#a855f7',
-        description: 'Niskoczęstotliwościowy szum transformatorów słyszalny przy inwersji i wietrze.'
+        description: 'Niskie częstotliwości (<200 Hz) z HVAC nie są pochłaniane przez powietrze, drzewa ani ekrany akustyczne – pozostają słyszalne nawet do 4 km.'
       }
     ],
-    sources: ['Analiza akustyczna chłodzenia']
+    sources: [
+      'Lyver Data Center Noise Study (2022) – protectpwc.org',
+      'https://protectpwc.org/wp-content/uploads/2023/02/Lyver-Data-Center-Noise-Study-123122.pdf',
+      'Model 1/r^1.5 z odbiciami gruntowymi i inwersjami atmosferycznymi'
+    ]
   },
   {
     id: 'noise_generators_buffers',
     name: 'Hałas Testów Generatorów Diesla',
     category: 'akustyka',
-    description: 'Zasięg słyszalności miesięcznych testów obciążeniowych ponad 100 agregatów prądotwórczych (720 MW).',
+    description: 'Model 1/r^1.5. Źródło: 95 dBA w odległości 7 m od wydechu silnika diesla. Zasięg słyszalności miesięcznych testów obciążeniowych ponad 100 agregatów (720 MW).',
     visible: false,
     opacity: 0.45,
     color: '#dc2626', // red-600
@@ -123,29 +127,48 @@ export const INITIAL_LAYERS: GISLayer[] = [
     type: 'buffer_ring',
     buffers: [
       {
-        distanceMeters: 1200,
-        label: 'Ogrodzenie Inwestycji (Test Diesla)',
-        valueText: '80 - 100 dBA przy ogrodzeniu',
+        distanceMeters: 250,
+        label: 'Strefa Testów Diesla (250 m)',
+        valueText: '61,7 dBA',
         color: '#991b1b',
         fillColor: '#b91c1c',
-        description: 'Emisja z wydechów silników Diesla bez rozbudowanych tłumików rezydeńskich.'
+        description: 'Hałas testów agregatów diesla. Porównywalny z ciągłą pracą wentylatorów na tym dystansie.'
       },
       {
-        distanceMeters: 1600,
-        label: 'Promień Słyszalności Diesli (1200 - 1600 m)',
-        valueText: 'Wyraźnie słyszalny pracę silników',
+        distanceMeters: 500,
+        label: 'Testy Diesla (500 m)',
+        valueText: '57,2 dBA',
         color: '#dc2626',
         fillColor: '#ef4444',
-        description: 'Wydech silnikowy zachowuje słyszalność w otwartym terenie w promieniu do 1,6 km.'
+        description: 'Przekroczenie normy nocnej o 17,2 dB. Hałas testów okresowych – tymczasowy, lecz bardzo intensywny.'
+      },
+      {
+        distanceMeters: 1000,
+        label: 'Testy Diesla (1000 m)',
+        valueText: '52,7 dBA',
+        color: '#b91c1c',
+        fillColor: '#dc2626',
+        description: 'Poziom hałasu zrównuje się z ciągłą pracą wentylatorów. Przekracza normę dzienną.'
+      },
+      {
+        distanceMeters: 2000,
+        label: 'Testy Diesla (2000 m)',
+        valueText: '48,2 dBA',
+        color: '#991b1b',
+        fillColor: '#b91c1c',
+        description: 'Poniżej normy dziennej, wciąż powyżej normy nocnej. Niskie częstotliwości słyszalne z dużej odległości.'
       }
     ],
-    sources: ['Dane KIP / testy obciążeniowe generatorów']
+    sources: [
+      'Decibel International – Kompleksowy przewodnik po dźwiękoszczelności centrów danych',
+      'https://www.decibelinternational.pl/blog/kompleksowy-przewodnik-po-d-wi-koszczelno-ci-i-optymalizacji-akustycznej-dla-centr-w-danych-6/'
+    ]
   },
   {
     id: 'thermal_impact_buffers',
     name: 'Wpływ na Temperaturę Otoczenia (Mikroklimat)',
     category: 'termika',
-    description: 'Poziome rozchodzenie się ciepłego powietrza z chillers i opadanie pętli cieplnej.',
+    description: 'Model wielomianowy drugiego stopnia (quadratic fit) – efekt wyspy ciepła centrów danych. ΔT(d) = 0,0158·d² – 0,3585·d + 2,0482 (d w km).',
     visible: false,
     opacity: 0.4,
     color: '#d97706', // amber-600
@@ -154,38 +177,49 @@ export const INITIAL_LAYERS: GISLayer[] = [
     buffers: [
       {
         distanceMeters: 300,
-        label: 'Płaskowyż Termiczny (0 - 300 m)',
-        valueText: '+1,5°C ÷ +2,5°C',
+        label: 'Strefa Bezpośrednia (0 – 0,3 km)',
+        valueText: '+1,94°C',
         color: '#b91c1c',
         fillColor: '#dc2626',
-        description: 'Strumienie gorącego powietrza rozchodzą się poziomo, podtrzymując podwyższoną temperaturę.'
+        description: 'Początek pomiarów od krawędzi centrum danych. Średni wzrost temperatury w bezpośrednim sąsiedztwie.'
       },
       {
         distanceMeters: 1000,
-        label: 'Szczytowe Opadanie Pętli Ciepła (500 m - 1 km)',
-        valueText: '+0,80°C',
+        label: 'Strefa Wysokiego Wpływu (1 km)',
+        valueText: '+1,71°C',
         color: '#c2410c',
         fillColor: '#ea580c',
-        description: 'Mieszanie i opadanie pętli ciepłego powietrza na przyległe tereny.'
+        description: 'Znaczący wzrost temperatury na dystansie 1 km. Wyraźnie odczuwalna modyfikacja mikroklimatu.'
       },
       {
         distanceMeters: 2000,
-        label: 'Zauważalny Zasięg Mikroklimatu (1 km - 2 km)',
-        valueText: '+0,58°C (>0,5°C do 1,5-2 km)',
+        label: 'Strefa Umiarkowanego Wpływu (2 km)',
+        valueText: '+1,39°C',
         color: '#d97706',
         fillColor: '#f59e0b',
-        description: 'Zasięg morfologiczny zauważalnej modyfikacji mikroklimatu lokalnego.'
+        description: 'Nadal zauważalny wzrost temperatury. Wpływ termiczny rozciąga się na przyległe tereny.'
       },
       {
         distanceMeters: 5000,
-        label: 'Śladowe Oddziaływanie Tła (2 km - 5 km)',
-        valueText: '+0,24°C (na 5 km)',
+        label: 'Strefa Oddziaływania Tła (5 km)',
+        valueText: '+0,65°C',
         color: '#ca8a04',
         fillColor: '#eab308',
-        description: 'Graniczny sygnał termiczny miesza się z naturalnymi wahaniami tła klimatycznego.'
+        description: 'Stopniowe wygaszanie sygnału termicznego. Mierzalny, ale już słabszy wpływ na temperaturę otoczenia.'
+      },
+      {
+        distanceMeters: 10000,
+        label: 'Granica Oddziaływania (10 km)',
+        valueText: '+0,04°C',
+        color: '#65a30d',
+        fillColor: '#84cc16',
+        description: 'Śladowy wpływ. Sygnał termiczny zanika w naturalnych wahaniach tła klimatycznego.'
       }
     ],
-    sources: ['Badania emisji ciepła odpadowego']
+    sources: [
+      'ResearchGate – The data heat island effect: quantifying the impact of AI data centers in a warming world',
+      'https://www.researchgate.net/publication/403073048_The_data_heat_island_effect_quantifying_the_impact_of_AI_data_centers_in_a_warming_world'
+    ]
   },
   {
     id: 'dolina_widawki_polygon',
@@ -218,20 +252,20 @@ export const INITIAL_LAYERS: GISLayer[] = [
 ];
 
 export const NOISE_DECAY_CHART_DATA = [
-  { distance: 15, noise: 77.5, label: '15 m', normNight: 40, normDay: 50, note: 'Wentylatory bezpośrednie' },
-  { distance: 60, noise: 60, label: '60 m', normNight: 40, normDay: 50, note: 'Spadek odległościowy' },
-  { distance: 240, noise: 50, label: '240 m', normNight: 40, normDay: 50, note: 'Przekroczenie normy nocnej +10 dB' },
-  { distance: 500, noise: 45, label: '500 m', normNight: 40, normDay: 50, note: 'Początek słyszalności humu' },
-  { distance: 800, noise: 40, label: '800 m', normNight: 40, normDay: 50, note: 'Norma nocna jednorodzinna' },
-  { distance: 1200, noise: 37, label: '1,2 km', normNight: 40, normDay: 50, note: 'Hum niskich częstotliwości' },
-  { distance: 1600, noise: 35, label: '1,6 km', normNight: 40, normDay: 50, note: 'Granica słyszalności testów diesla' },
+  { distance: 150, noiseContinuous: 65, noiseGenerator: 95, label: '150 m', normNight: 40, normDay: 50, note: 'Źródło wentylatorów (500 stóp / 152,4 m)' },
+  { distance: 250, noiseContinuous: 61.8, noiseGenerator: 61.7, label: '250 m', normNight: 40, normDay: 50, note: 'Typowa praca centrum danych' },
+  { distance: 500, noiseContinuous: 57.3, noiseGenerator: 57.2, label: '500 m', normNight: 40, normDay: 50, note: 'Znaczne przekroczenie normy nocnej' },
+  { distance: 1000, noiseContinuous: 52.7, noiseGenerator: 52.7, label: '1 km', normNight: 40, normDay: 50, note: 'Przekroczenie normy dziennej' },
+  { distance: 2000, noiseContinuous: 48.2, noiseGenerator: 48.2, label: '2 km', normNight: 40, normDay: 50, note: 'Poniżej normy dziennej, powyżej nocnej' },
+  { distance: 3200, noiseContinuous: 45.1, noiseGenerator: 45.1, label: '3,2 km', normNight: 40, normDay: 50, note: 'Niskie częstotliwości wciąż wyraźnie słyszalne' },
+  { distance: 4000, noiseContinuous: 43.8, noiseGenerator: 43.8, label: '4 km', normNight: 40, normDay: 50, note: 'Granica wyraźnej słyszalności niskich częstotliwości' },
 ];
 
 export const THERMAL_ELEVATION_CHART_DATA = [
-  { distance: 100, tempRise: 2.0, label: '100 m', threshold: 0.5, note: 'Płaskowyż termiczny' },
-  { distance: 300, tempRise: 1.8, label: '300 m', threshold: 0.5, note: 'Koniec strefy bezpośredniej' },
-  { distance: 750, tempRise: 0.80, label: '750 m', threshold: 0.5, note: 'Opadanie pętli ciepłego powietrza' },
-  { distance: 1500, tempRise: 0.58, label: '1,5 km', threshold: 0.5, note: 'Granica zauważalnej modyfikacji' },
-  { distance: 3000, tempRise: 0.35, label: '3 km', threshold: 0.5, note: 'Wygaszanie sygnału' },
-  { distance: 5000, tempRise: 0.24, label: '5 km', threshold: 0.5, note: 'Śladowy wpływ w tle' },
+  { distance: 0, tempRise: 2.07, label: '0 km', threshold: 0.5, note: 'Krawędź centrum danych' },
+  { distance: 1000, tempRise: 1.71, label: '1 km', threshold: 0.5, note: 'Wysoki wpływ termiczny' },
+  { distance: 2000, tempRise: 1.39, label: '2 km', threshold: 0.5, note: 'Umiarkowany wpływ' },
+  { distance: 3000, tempRise: 1.11, label: '3 km', threshold: 0.5, note: 'Stopniowe wygaszanie' },
+  { distance: 5000, tempRise: 0.65, label: '5 km', threshold: 0.5, note: 'Oddziaływanie tła' },
+  { distance: 10000, tempRise: 0.04, label: '10 km', threshold: 0.5, note: 'Granica oddziaływania' },
 ];

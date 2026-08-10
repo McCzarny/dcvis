@@ -1,13 +1,15 @@
 import React from 'react';
-import { Server, BarChart2 } from 'lucide-react';
+import { Server, BarChart2, FileText, MessageSquare } from 'lucide-react';
 import { DATA_CENTER_SPECS } from '../data/layersRegistry';
 
 interface HeaderNavProps {
   onOpenAnalytics: () => void;
+  onOpenProjectDocs: () => void;
 }
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({
-  onOpenAnalytics
+  onOpenAnalytics,
+  onOpenProjectDocs
 }) => {
   return (
     <header className="h-16 bg-slate-900 border-b border-slate-800 text-white z-[2000] relative px-4 flex items-center justify-between shadow-lg flex-shrink-0">
@@ -49,6 +51,15 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
       {/* Action Buttons */}
       <div className="flex items-center space-x-2">
         <button
+          onClick={onOpenProjectDocs}
+          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-amber-600/90 hover:bg-amber-500 text-white text-xs font-semibold transition-all shadow-sm"
+          title="Otwórz raport i dokumentację projektu"
+        >
+          <FileText className="w-4 h-4" />
+          <span className="hidden sm:inline">Metodologia i źródła</span>
+        </button>
+
+        <button
           onClick={onOpenAnalytics}
           className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold transition-all shadow-sm"
           title="Otwórz analizę wykresową hałasu i temperatury"
@@ -56,6 +67,17 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           <BarChart2 className="w-4 h-4" />
           <span className="hidden sm:inline">Wykresy i Symulator</span>
         </button>
+
+        <a
+          href="https://github.com/McCzarny/dcvis/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold transition-all shadow-sm"
+          title="Zgłoś uwagę lub błąd przez GitHub Issues"
+        >
+          <MessageSquare className="w-4 h-4" />
+          <span className="hidden sm:inline">Zgłoś uwagę</span>
+        </a>
       </div>
     </header>
   );

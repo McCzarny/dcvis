@@ -11,7 +11,7 @@ import {
   Area
 } from 'recharts';
 import { NOISE_DECAY_CHART_DATA, THERMAL_ELEVATION_CHART_DATA } from '../data/layersRegistry';
-import { X, Volume2, Thermometer, Moon, Sun, Wind, Activity } from 'lucide-react';
+import { X, Volume2, Thermometer, Wind, Activity } from 'lucide-react';
 
 interface AnalyticsDrawerProps {
   isOpen: boolean;
@@ -20,21 +20,22 @@ interface AnalyticsDrawerProps {
 
 export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<'noise' | 'thermal'>('noise');
-  const [nightMode, setNightMode] = useState(true);
   const [windInversion, setWindInversion] = useState(false);
 
   if (!isOpen) return null;
 
-  // Obliczanie modyfikatora szumu przy inwersji nocnej
+  // Obliczanie modyfikatora szumu przy inwersji nocnej (model 1/r^1.5)
   const chartNoiseData = NOISE_DECAY_CHART_DATA.map((item) => {
-    let effectiveNoise = item.noise;
+    let effCont = item.noiseContinuous;
+    let effGen = item.noiseGenerator;
     if (windInversion && item.distance >= 500) {
-      effectiveNoise += 5; // podbicie słyszalności humu o 5 dBA przy inwersji
+      effCont += 5;
+      if (effGen != null) effGen += 5;
     }
     return {
       ...item,
-      effectiveNoise,
-      normLimit: nightMode ? item.normNight : item.normDay
+      effectiveNoiseContinuous: effCont,
+      effectiveNoiseGenerator: effGen != null ? effGen : undefined
     };
   });
 
@@ -97,18 +98,6 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
           {activeTab === 'noise' && (
             <div className="flex items-center space-x-3 text-xs pb-2">
               <button
-                onClick={() => setNightMode(!nightMode)}
-                className={`px-3 py-1.5 rounded-lg border flex items-center space-x-1.5 transition-all ${
-                  nightMode
-                    ? 'bg-indigo-950 text-indigo-300 border-indigo-700'
-                    : 'bg-amber-950 text-amber-300 border-amber-700'
-                }`}
-              >
-                {nightMode ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
-                <span>{nightMode ? 'Pora Nocna (40 dBA)' : 'Pora Dienna (50 dBA)'}</span>
-              </button>
-
-              <button
                 onClick={() => setWindInversion(!windInversion)}
                 className={`px-3 py-1.5 rounded-lg border flex items-center space-x-1.5 transition-all ${
                   windInversion
@@ -130,10 +119,10 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
               <div className="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-sm text-slate-200">
-                    Spadek Natężenia Dźwięku Wentylatorów wraz z Odległością (w m)
+                    Spadek Natężenia Dźwięku – Wentylatory (ciągły) i Agregaty Diesla (testy)
                   </h3>
                   <span className="text-xs text-rose-400 font-mono">
-                    Strefa przekroczeń: 0 - 800 m
+                    Model 1/r<sup>1,5</sup> &middot; Strefa przekroczeń: 0–2000 m
                   </span>
                 </div>
 
@@ -142,7 +131,7 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
                     <ComposedChart data={chartNoiseData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                       <XAxis dataKey="label" stroke="#94a3b8" fontSize={12} />
-                      <YAxis stroke="#94a3b8" fontSize={12} domain={[30, 90]} unit=" dBA" />
+                      <YAxis stroke="#94a3b8" fontSize={12} domain={[30, 100]} unit=" dBA" />
                       <RechartsTooltip
                         contentStyle={{
                           backgroundColor: '#0f172a',
@@ -153,25 +142,32 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
                       />
                       <Area
                         type="monotone"
-                        dataKey="effectiveNoise"
-                        fill="rgba(244, 63, 94, 0.15)"
+                        dataKey="effectiveNoiseContinuous"
+                        fill="rgba(244, 63, 94, 0.12)"
                         stroke="#f43f5e"
                         strokeWidth={3}
-                        name="Poziom Hałasu (dBA)"
+                        name="Hałas ciągły wentylatorów (dBA)"
                       />
                       <Line
                         type="monotone"
-                        dataKey="normLimit"
-                        stroke="#10b981"
+                        dataKey="effectiveNoiseGenerator"
+                        stroke="#f97316"
                         strokeWidth={2}
-                        strokeDasharray="5 5"
-                        name={nightMode ? 'Norma Nocna (40 dBA)' : 'Norma Dienna (50 dBA)'}
+                        strokeDasharray="6 3"
+                        name="Hałas testów diesla (dBA)"
+                        connectNulls
                       />
                       <ReferenceLine
                         y={40}
                         stroke="#10b981"
                         strokeDasharray="3 3"
                         label={{ value: 'Norma Nocna 40 dBA', fill: '#10b981', fontSize: 10 }}
+                      />
+                      <ReferenceLine
+                        y={50}
+                        stroke="#f59e0b"
+                        strokeDasharray="3 3"
+                        label={{ value: 'Norma Dienna 50 dBA', fill: '#f59e0b', fontSize: 10 }}
                       />
                     </ComposedChart>
                   </ResponsiveContainer>
@@ -181,21 +177,21 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
               {/* Tabela szczegółów opisu hałasu */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                 <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                  <div className="font-bold text-rose-400 mb-1">0 - 240 m (Strefa Krytyczna)</div>
+                  <div className="font-bold text-rose-400 mb-1">150–500 m (Strefa Krytyczna)</div>
                   <p className="text-slate-300">
-                    Hałas rzędu 85 do 50 dBA. Znaczne przekroczenie dopuszczalnej normy nocnej dla zabudowy mieszkaniowej o ponad +10 dB.
+                    Hałas 65–57 dBA. Znaczne przekroczenie normy nocnej (40 dBA) o 17–25 dB. Ciągły szum wentylatorów bardziej uciążliwy niż tymczasowy hałas generatorów.
                   </p>
                 </div>
                 <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                  <div className="font-bold text-amber-400 mb-1">500 - 800 m (Granica Normy)</div>
+                  <div className="font-bold text-amber-400 mb-1">500–1000 m (Strefa Przekroczeń)</div>
                   <p className="text-slate-300">
-                    Spadek z 45 dBA do 40 dBA. Punkt 800 m (0,5 mili) wyznacza formalne sprostanie normie wyrażonej w dBA.
+                    Spadek do 53 dBA. Norma nocna wciąż przekroczona o ~13 dB. Hałas wentylatorów i generatorów zrównuje się na tym dystansie.
                   </p>
                 </div>
                 <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                  <div className="font-bold text-purple-400 mb-1">500 - 1600 m (Hum & Diesle)</div>
+                  <div className="font-bold text-purple-400 mb-1">2–4 km (Niskie Częstotliwości)</div>
                   <p className="text-slate-300">
-                    Niskoczęstotliwościowe buczenie pozostaje słyszalne. Testy diesli (80-100 dBA na ogrodzeniu) docierają do 1,6 km.
+                    Niskie częstotliwości (&lt;200 Hz) nie są pochłaniane przez powietrze ani ekrany akustyczne. Słyszalne do 3,2–4 km. dBA drastycznie niedoszacowuje uciążliwości.
                   </p>
                 </div>
               </div>
@@ -205,10 +201,10 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
               <div className="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-sm text-slate-200">
-                    Wzrost Temperatury Otoczenia (°C / K) w Zależności od Odległości
+                    Wzrost Temperatury Otoczenia (°C) – Model Wielomianowy (Quadratic Fit)
                   </h3>
                   <span className="text-xs text-amber-400 font-mono">
-                    Szczyt oddziaływania: 0 - 1,5 km
+                    ΔT(d) = 0,0158·d² – 0,3585·d + 2,0482
                   </span>
                 </div>
 
@@ -248,21 +244,21 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
               {/* Tabela szczegółów opisu termiki */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                 <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                  <div className="font-bold text-amber-400 mb-1">0 - 300 m (Płaskowyż Termiczny)</div>
+                  <div className="font-bold text-amber-400 mb-1">0 – 1 km (Wysoki wpływ)</div>
                   <p className="text-slate-300">
-                    Temperatura powierzchni otoczenia podwyższona o +1,5°C ÷ +2,5°C z powodu poziomego strumienia ciepła z chillers.
+                    Wzrost temperatury z +2,07°C przy krawędzi do +1,71°C na 1 km. Wyraźnie odczuwalna modyfikacja mikroklimatu lokalnego.
                   </p>
                 </div>
                 <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                  <div className="font-bold text-orange-400 mb-1">500 m - 1 km (Szczyt Mikroklimatu)</div>
+                  <div className="font-bold text-orange-400 mb-1">1 – 3 km (Umiarkowany wpływ)</div>
                   <p className="text-slate-300">
-                    Średni wzrost temperatury +0,80 K spowodowany opadaniem unoszącej pętli ciepłego powietrza.
+                    Spadek z +1,71°C do +1,11°C. Stopniowe wygaszanie sygnału termicznego, wciąż mierzalny wpływ.
                   </p>
                 </div>
                 <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                  <div className="font-bold text-amber-300 mb-1">1,5 km - 5 km (Wygaszanie)</div>
+                  <div className="font-bold text-amber-300 mb-1">3 – 10 km (Oddziaływanie tła)</div>
                   <p className="text-slate-300">
-                    Spadek z +0,58 K na 1,5 km do śladowego +0,24 K na 5 km, gdzie sygnał miesza się z naturalnymi wahaniami tła.
+                    Spadek z +1,11°C przez +0,65°C (5 km) do śladowego +0,04°C (10 km). Sygnał zanika w naturalnym tle klimatycznym.
                   </p>
                 </div>
               </div>

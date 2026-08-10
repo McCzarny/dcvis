@@ -313,7 +313,7 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
             <Tooltip permanent direction="center" className="dc-polygon-label">
               <div>
                 <div className="font-bold text-xs uppercase tracking-wide">Planowane Data Center</div>
-                <div className="text-[10px] opacity-90">Powierzchnia: 52,6 ha (71 działek)</div>
+                <div className="text-[10px] opacity-90">Powierzchnia: 52,6 ha</div>
               </div>
             </Tooltip>
 

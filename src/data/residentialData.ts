@@ -39,22 +39,27 @@ export function getResidentialBuildings(): ResidentialBuilding[] {
     const distBoundaryMeters = Math.round(turf.distance(point, nearestPoint, { units: 'meters' }));
 
     // Ocena hałasu i temperatury w punkcie na podstawie odległości od granicy
-    let noiseCont = '< 40 dBA (Norma zachowana)';
-    if (distBoundaryMeters <= 60) noiseCont = '~60 dBA (Wysoki hałas)';
-    else if (distBoundaryMeters <= 240) noiseCont = '50-60 dBA (Przekroczenie normy nocnej o 10-20 dB)';
-    else if (distBoundaryMeters <= 500) noiseCont = '45-50 dBA (Przekroczenie normy nocnej)';
-    else if (distBoundaryMeters <= 800) noiseCont = '40-45 dBA (W pobliżu normy nocnej)';
-    else if (distBoundaryMeters <= 1500) noiseCont = '< 40 dBA (Słyszalny szum niskoczęstotliwościowy)';
+    // Model 1/r^1.5 z odbiciami gruntowymi – źródło 65 dBA w odl. 152,4 m (500 stóp)
+    let noiseCont = '~44 dBA (Poniżej normy dziennej, wciąż powyżej nocnej)';
+    if (distBoundaryMeters <= 150) noiseCont = '~65 dBA (Źródło hałasu wentylatorów)';
+    else if (distBoundaryMeters <= 250) noiseCont = '61,8 dBA (Przekroczenie normy nocnej o 21,8 dB)';
+    else if (distBoundaryMeters <= 500) noiseCont = '57,3 dBA (Przekroczenie normy nocnej o 17,3 dB)';
+    else if (distBoundaryMeters <= 1000) noiseCont = '52,7 dBA (Przekroczenie normy dziennej)';
+    else if (distBoundaryMeters <= 2000) noiseCont = '48,2 dBA (Poniżej normy dziennej, powyżej nocnej)';
+    else if (distBoundaryMeters <= 4000) noiseCont = '43,8 dBA (Niskie częstotliwości wciąż słyszalne)';
 
-    let noiseGen = 'Odczuwalne ryczenie diesli';
-    if (distBoundaryMeters <= 1200) noiseGen = '60-80 dBA (Bardzo głośne testy silników)';
-    else if (distBoundaryMeters <= 1600) noiseGen = '45-60 dBA (Wyraźnie słyszalny wydech silników)';
-    else noiseGen = '< 45 dBA (Słabe tło)';
+    // Generatory diesla – źródło 95 dBA w odl. 7 m, model 1/r^1.5
+    let noiseGen = '< 45 dBA (Słabe tło)';
+    if (distBoundaryMeters <= 250) noiseGen = '61,7 dBA (Intensywne testy diesla)';
+    else if (distBoundaryMeters <= 500) noiseGen = '57,2 dBA (Głośne testy diesla)';
+    else if (distBoundaryMeters <= 1000) noiseGen = '52,7 dBA (Wyraźnie słyszalny wydech silników)';
+    else if (distBoundaryMeters <= 2000) noiseGen = '48,2 dBA (Słyszalny hałas testów)';
 
-    let tempRise = '+0,24°C (Śladowe)';
-    if (distBoundaryMeters <= 300) tempRise = '+1,5°C ÷ +2,5°C (Płaskowyż termiczny)';
-    else if (distBoundaryMeters <= 1000) tempRise = '+0,80°C (Odczuwalna wyspa ciepła)';
-    else if (distBoundaryMeters <= 2000) tempRise = '+0,58°C (Modyfikacja mikroklimatu)';
+    let tempRise = '+<0,65°C (Oddziaływanie tła)';
+    if (distBoundaryMeters <= 300) tempRise = '+1,94°C (Strefa bezpośrednia)';
+    else if (distBoundaryMeters <= 1000) tempRise = '+1,71°C (Wysoki wpływ termiczny)';
+    else if (distBoundaryMeters <= 2000) tempRise = '+1,39°C (Umiarkowany wpływ)';
+    else if (distBoundaryMeters <= 5000) tempRise = '+0,65°C (Oddziaływanie tła)';
 
     return {
       id: `res_building_${index + 1}`,

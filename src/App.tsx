@@ -7,12 +7,14 @@ import { LayerControlPanel } from './components/LayerControlPanel';
 import { LegendOverlay } from './components/LegendOverlay';
 import { AnalyticsDrawer } from './components/AnalyticsDrawer';
 import { WarningBanner } from './components/WarningBanner';
+import { ProjectDocsModal } from './components/ProjectDocsModal';
 
 export const App: React.FC = () => {
   const [layers, setLayers] = useState<GISLayer[]>(INITIAL_LAYERS);
   // Domyślnie podkład Standard (OSM)
   const [tileProvider, setTileProvider] = useState<MapTileProvider>('osm');
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const [isProjectDocsOpen, setIsProjectDocsOpen] = useState(false);
   const [activePreset, setActivePreset] = useState<'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | null>('continuous_noise');
   
   // Inicjalizuj preset "Hałas wentylatorów" na starcie
@@ -68,6 +70,7 @@ export const App: React.FC = () => {
       {/* Nagłówek zawsze na wierzchu (z-[2000]) */}
       <HeaderNav
         onOpenAnalytics={() => setIsAnalyticsOpen(true)}
+        onOpenProjectDocs={() => setIsProjectDocsOpen(true)}
       />
 
       {/* Banner ostrzeżenia o fazie rozwoju */}
@@ -98,6 +101,11 @@ export const App: React.FC = () => {
       <AnalyticsDrawer
         isOpen={isAnalyticsOpen}
         onClose={() => setIsAnalyticsOpen(false)}
+      />
+
+      <ProjectDocsModal
+        isOpen={isProjectDocsOpen}
+        onClose={() => setIsProjectDocsOpen(false)}
       />
     </div>
   );
