@@ -6,7 +6,6 @@ import { MapContainerComponent } from './components/MapContainer';
 import { LayerControlPanel } from './components/LayerControlPanel';
 import { LegendOverlay } from './components/LegendOverlay';
 import { AnalyticsDrawer } from './components/AnalyticsDrawer';
-import { WarningBanner } from './components/WarningBanner';
 import { ProjectDocsModal } from './components/ProjectDocsModal';
 
 export const App: React.FC = () => {
@@ -72,9 +71,6 @@ export const App: React.FC = () => {
         onOpenAnalytics={() => setIsAnalyticsOpen(true)}
         onOpenProjectDocs={() => setIsProjectDocsOpen(true)}
       />
-
-      {/* Banner ostrzeżenia o fazie rozwoju */}
-      <WarningBanner />
 
       {/* Kontener mapy */}
       <main className="flex-1 relative w-full h-full">

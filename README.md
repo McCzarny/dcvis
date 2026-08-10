@@ -5,7 +5,7 @@ https://mcczarny.github.io/dcvis/
 Interaktywne narzędzie do wizualizacji informacji na temat planów inwestycji Data Center w Domiechowicach.
 
 >  [!IMPORTANT]
-> Projekt jest w fazie rozwoju i nie jest jeszcze gotowy do użytku publicznego. Wszelkie dane i funkcjonalności są poglądowe i wymagają dalszej weryfikacji.
+> Projekt jest w fazie rozwoju. Metodologia i dane źródłowe są podane na stronie. W razie wątpliwości: <a href="https://github.com/McCzarny/dcvis/issues" target="_blank">Zgłoś problem</a>.
 
 ## O projekcie
 
