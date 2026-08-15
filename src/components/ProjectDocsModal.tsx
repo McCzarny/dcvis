@@ -7,6 +7,7 @@ import {
   Waves,
   HeartPulse,
   ThermometerSun,
+  Droplets,
   Link2,
   type LucideIcon,
 } from 'lucide-react';
@@ -17,7 +18,7 @@ interface Source {
   note: string;
 }
 
-type Accent = 'sky' | 'rose' | 'purple' | 'indigo' | 'amber';
+type Accent = 'sky' | 'rose' | 'purple' | 'indigo' | 'amber' | 'cyan';
 
 interface MethodCard {
   id: string;
@@ -66,6 +67,13 @@ const accentStyles: Record<
     iconColor: 'text-amber-400',
     title: 'text-amber-300',
     source: 'text-amber-500',
+  },
+  cyan: {
+    box: 'bg-cyan-950/20 border-cyan-800/40',
+    icon: 'bg-cyan-950/80 border-cyan-500/40',
+    iconColor: 'text-cyan-400',
+    title: 'text-cyan-300',
+    source: 'text-cyan-500',
   },
 };
 
@@ -193,6 +201,56 @@ const cards: MethodCard[] = [
       },
     ],
   },
+  {
+    id: 'bilans-wodny',
+    title: 'Bilans wodny – zużycie wody przez centrum danych (500 MW)',
+    icon: Droplets,
+    accent: 'cyan',
+    description: (
+      <div className="space-y-2">
+        <p>
+          Roczny pobór energii dla mocy <strong>500 MW przy pracy 24/7</strong> wynosi{' '}
+          <strong>4 380 000 000 kWh (4,38 TWh)</strong>. Zużycie wody liczono dwutorowo:{' '}
+          <strong>bezpośrednio</strong> – średnim wskaźnikiem WUE dla Polski{' '}
+          <strong>0,21 l/kWh</strong> (chłodzenie), oraz <strong>pośrednio</strong> – wodą
+          zużywaną przy produkcji energii elektrycznej, przyjmując średnie bezpowrotne zużycie dla
+          elektrowni cieplnych <strong>2,5 l/kWh</strong> (zakres 1,5–4 l/kWh; elektrownie węglowe
+          z chłodzeniem wieżowym tracą zazwyczaj 2,0–3,5 l/kWh).
+        </p>
+        <p>
+          Wynik: chłodzenie bezpośrednie <strong>~919 800 m³/rok</strong>, produkcja energii{' '}
+          <strong>~10 950 000 m³/rok</strong>, łącznie <strong>~11 869 800 m³/rok</strong>{' '}
+          (~11,9 mld litrów). Przeciętny Polak zużywa ok. <strong>150 l wody dziennie</strong>,
+          więc Bełchatów (<strong>52 331 mieszkańców</strong>) zużywa rocznie ok.{' '}
+          <strong>2 865 000 m³</strong>. Centrum danych zużywa zatem ok.{' '}
+          <strong>4,1 raza więcej wody</strong> niż wszyscy mieszkańcy Bełchatowa, a roczne zużycie
+          miasta wystarczyłoby obiektowi na ok. <strong>2,9 miesiąca</strong> pracy.
+        </p>
+      </div>
+    ),
+    sources: [
+      {
+        label: 'EcoEkonomia – Europa pokazuje, jak odpowiedzialnie chłodzić centra danych',
+        url: 'https://ecoekonomia.pl/europa-pokazuje-jak-odpowiedzialnie-chlodzic-centra-danych/',
+        note: 'Średnie wartości wskaźnika WUE dla Polski: ok. 0,21 l/kWh.',
+      },
+      {
+        label: 'GlobEnergia – Ile wody potrzebuje elektrownia węglowa?',
+        url: 'https://globenergia.pl/ile-wody-potrzebuje-elektrownia-weglowa-to-nawet-190-l-kwh/',
+        note: 'Średnie zużycie wody przy produkcji energii: 1,5–4 l/kWh; elektrownie węglowe z chłodzeniem wieżowym – bezpowrotne straty ok. 2,0–3,5 l/kWh. Do obliczeń przyjęto średnio 2,5 l/kWh.',
+      },
+      {
+        label: 'Mojawoda.com – Średnie zużycie wody na osobę',
+        url: 'https://mojawoda.com/pl/blog/poradniki/srednie-zuzycie-wody-na-osobe-w-m3-i-litrach-kalkulator-zuzycia-wody-2026',
+        note: 'Przeciętny Polak zużywa ok. 150 litrów wody dziennie.',
+      },
+      {
+        label: 'Wikipedia – Bełchatów',
+        url: 'https://pl.wikipedia.org/wiki/Be%C5%82chat%C3%B3w',
+        note: 'Liczba mieszkańców Bełchatowa: 52 331.',
+      },
+    ],
+  },
 ];
 
 interface ProjectDocsModalProps {
@@ -217,7 +275,7 @@ export const ProjectDocsModal: React.FC<ProjectDocsModalProps> = ({ isOpen, onCl
                 Metodologia & Źródła
               </h2>
               <p className="text-xs text-slate-400">
-                Założenia modelu akustycznego, wpływ na zdrowie i bibliografia
+                Założenia modeli (akustyka, mikroklimat, bilans wodny), wpływ na zdrowie i bibliografia
               </p>
             </div>
           </div>

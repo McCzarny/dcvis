@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { GISLayer } from '../types/gis';
-import { Layers, Eye, EyeOff, Sliders, ChevronLeft, ChevronRight, Volume2, ShieldAlert, Thermometer, ShieldCheckIcon, MapPin } from 'lucide-react';
+import { Layers, Eye, EyeOff, Sliders, ChevronLeft, ChevronRight, Volume2, ShieldAlert, Thermometer, ShieldCheckIcon, MapPin, Droplets } from 'lucide-react';
 
 interface LayerControlPanelProps {
   layers: GISLayer[];
   onToggleLayer: (id: string) => void;
   onChangeOpacity: (id: string, opacity: number) => void;
-  onApplyPreset: (preset: 'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | null) => void;
-  activePreset: 'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | null;
+  onApplyPreset: (preset: 'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | 'water' | null) => void;
+  activePreset: 'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | 'water' | null;
 }
 
 export const LayerControlPanel: React.FC<LayerControlPanelProps> = ({
@@ -50,6 +50,12 @@ export const LayerControlPanel: React.FC<LayerControlPanelProps> = ({
       label: 'Odległości do zabudowań',
       color: 'bg-indigo-50 border-indigo-200 text-indigo-900 hover:bg-indigo-100',
       icon: <MapPin className="w-3.5 h-3.5 text-indigo-600" />
+    },
+    {
+      id: 'water' as const,
+      label: 'Zużycie wody (DC vs Bełchatów)',
+      color: 'bg-cyan-50 border-cyan-200 text-cyan-900 hover:bg-cyan-100',
+      icon: <Droplets className="w-3.5 h-3.5 text-cyan-600" />
     }
   ];
 

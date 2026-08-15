@@ -222,6 +222,28 @@ export const INITIAL_LAYERS: GISLayer[] = [
     ]
   },
   {
+    id: 'water_consumption_layer',
+    name: 'Zużycie Wody – Data Center vs Bełchatów',
+    category: 'woda',
+    description: 'Dwa koła o powierzchni proporcjonalnej do rocznego zużycia wody: Data Center 500 MW (~11,87 mln m³/rok, chłodzenie WUE 0,21 l/kWh + produkcja energii ~2,5 l/kWh) oraz Bełchatów (~2,87 mln m³/rok, 52 331 mieszk. × 150 l/dobę). Szczegółowe porównanie znajduje się w panelu legendy.',
+    visible: false,
+    opacity: 1,
+    color: '#0891b2', // cyan-600
+    fillColor: '#22d3ee',
+    weight: 2,
+    type: 'water_consumption',
+    sources: [
+      'EcoEkonomia – Europa pokazuje, jak odpowiedzialnie chłodzić centra danych (WUE w PL ~0,21 l/kWh)',
+      'https://ecoekonomia.pl/europa-pokazuje-jak-odpowiedzialnie-chlodzic-centra-danych/',
+      'GlobEnergia – Ile wody potrzebuje elektrownia węglowa (1,5–4 l/kWh)',
+      'https://globenergia.pl/ile-wody-potrzebuje-elektrownia-weglowa-to-nawet-190-l-kwh/',
+      'Mojawoda.com – średnie zużycie wody na osobę w Polsce (~150 l/dobę)',
+      'https://mojawoda.com/pl/blog/poradniki/srednie-zuzycie-wody-na-osobe-w-m3-i-litrach-kalkulator-zuzycia-wody-2026',
+      'Wikipedia – Bełchatów (liczba mieszkańców: 52 331)',
+      'https://pl.wikipedia.org/wiki/Be%C5%82chat%C3%B3w'
+    ]
+  },
+  {
     id: 'dolina_widawki_polygon',
     name: 'Obszar Chronionego Krajobrazu Doliny Widawki',
     category: 'srodowisko',
@@ -268,4 +290,61 @@ export const THERMAL_ELEVATION_CHART_DATA = [
   { distance: 3000, tempRise: 1.11, label: '3 km', threshold: 0.5, note: 'Stopniowe wygaszanie' },
   { distance: 5000, tempRise: 0.65, label: '5 km', threshold: 0.5, note: 'Oddziaływanie tła' },
   { distance: 10000, tempRise: 0.04, label: '10 km', threshold: 0.5, note: 'Granica oddziaływania' },
+];
+
+// --- Bilans wodny: Data Center 500 MW vs mieszkańcy Bełchatowa ---
+export const WATER_ANALYSIS = {
+  powerMW: 500,
+  annualEnergyKWh: 4_380_000_000, // 500 MW × 24 h × 365 dni = 4,38 TWh
+  annualEnergyLabel: '4 380 000 000 kWh (4,38 TWh)',
+  direct: {
+    label: 'Bezpośrednie (chłodzenie – średnie WUE w PL)',
+    factorLKwh: 0.21,
+    factorLabel: '0,21 l/kWh',
+    annualM3: 919_800,
+    annualLabel: '~919 800 m³'
+  },
+  indirect: {
+    label: 'Pośrednie (produkcja energii elektrycznej – średnia dla miksu PL)',
+    factorLKwh: 2.5,
+    factorLabel: '~2,50 l/kWh',
+    annualM3: 10_950_000,
+    annualLabel: '~10 950 000 m³'
+  },
+  total: {
+    factorLKwh: 2.71,
+    factorLabel: '~2,71 l/kWh',
+    annualM3: 11_869_800,
+    annualLabel: '~11 869 800 m³',
+    annualLitersLabel: '~11,9 mld litrów'
+  },
+  belchatow: {
+    population: 52_331,
+    litersPerPersonDay: 150,
+    annualM3: 2_865_122,
+    annualLabel: '~2 865 000 m³',
+    centerCoords: [51.36239, 19.36522] as [number, number] // 51°21'44.6"N 19°21'54.8"E
+  },
+  mapCircles: {
+    dcRadiusMeters: 2328.6,
+    cityRadiusMeters: 1150,
+    scaleNote: 'Pola powierzchni kół proporcjonalne do rocznego zużycia wody'
+  },
+  ratioVsCity: 4.1,
+  cityWaterForDcMonths: 2.9
+};
+
+export const WATER_COMPARISON_CHART_DATA = [
+  {
+    podmiot: 'Data Center 500 MW',
+    bezposrednie: WATER_ANALYSIS.direct.annualM3,
+    posrednie: WATER_ANALYSIS.indirect.annualM3,
+    note: 'Chłodzenie (WUE 0,21 l/kWh) + produkcja energii (~2,5 l/kWh)'
+  },
+  {
+    podmiot: 'Bełchatów (52 331 mieszk.)',
+    bezposrednie: WATER_ANALYSIS.belchatow.annualM3,
+    posrednie: 0,
+    note: '52 331 mieszkańców × 150 l/dobę × 365 dni'
+  }
 ];

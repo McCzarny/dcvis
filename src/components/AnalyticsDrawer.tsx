@@ -2,16 +2,24 @@ import React, { useState } from 'react';
 import {
   ResponsiveContainer,
   ComposedChart,
+  BarChart,
+  Bar,
   Line,
   XAxis,
   YAxis,
   Tooltip as RechartsTooltip,
   CartesianGrid,
   ReferenceLine,
+  Legend,
   Area
 } from 'recharts';
-import { NOISE_DECAY_CHART_DATA, THERMAL_ELEVATION_CHART_DATA } from '../data/layersRegistry';
-import { X, Volume2, Thermometer, Wind, Activity } from 'lucide-react';
+import {
+  NOISE_DECAY_CHART_DATA,
+  THERMAL_ELEVATION_CHART_DATA,
+  WATER_COMPARISON_CHART_DATA,
+  WATER_ANALYSIS
+} from '../data/layersRegistry';
+import { X, Volume2, Thermometer, Wind, Activity, Droplets } from 'lucide-react';
 
 interface AnalyticsDrawerProps {
   isOpen: boolean;
@@ -19,7 +27,7 @@ interface AnalyticsDrawerProps {
 }
 
 export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'noise' | 'thermal'>('noise');
+  const [activeTab, setActiveTab] = useState<'noise' | 'thermal' | 'water'>('noise');
   const [windInversion, setWindInversion] = useState(false);
 
   if (!isOpen) return null;
@@ -50,10 +58,10 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
             </div>
             <div>
               <h2 className="font-bold text-base text-slate-100">
-                Wykresy Oddziaływania Akustycznego i Mikroklimatycznego
+                Wykresy Oddziaływania: Hałas, Mikroklimat i Zużycie Wody
               </h2>
               <p className="text-xs text-slate-400">
-                Data Center Domiechowice - Symulacja spadku hałasu i wzrostu temperatury otoczenia
+                Data Center Domiechowice - Symulacja spadku hałasu, wzrostu temperatury i bilansu wodnego
               </p>
             </div>
           </div>
@@ -91,6 +99,18 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
             >
               <Thermometer className="w-4 h-4" />
               <span>Profil Termiczny (Zasięg Ciepła °C)</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('water')}
+              className={`px-4 py-2.5 rounded-t-xl text-xs font-bold flex items-center space-x-2 border-t border-x transition-all ${
+                activeTab === 'water'
+                  ? 'bg-slate-900 text-cyan-400 border-slate-700 shadow-md'
+                  : 'text-slate-200 border-transparent hover:text-slate-100 bg-slate-800/30'
+              }`}
+            >
+              <Droplets className="w-4 h-4" />
+              <span>Bilans Wodny (DC vs Bełchatów)</span>
             </button>
           </div>
 
@@ -196,7 +216,7 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
                 </div>
               </div>
             </div>
-          ) : (
+          ) : activeTab === 'thermal' ? (
             <div className="space-y-4">
               <div className="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
                 <div className="flex items-center justify-between mb-2">
@@ -259,6 +279,120 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
                   <div className="font-bold text-amber-300 mb-1">3 – 10 km (Oddziaływanie tła)</div>
                   <p className="text-slate-300">
                     Spadek z +1,11°C przez +0,65°C (5 km) do śladowego +0,04°C (10 km). Sygnał zanika w naturalnym tle klimatycznym.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-sm text-slate-200">
+                    Roczne Zużycie Wody – Data Center 500 MW vs Mieszkańcy Bełchatowa
+                  </h3>
+                  <span className="text-xs text-cyan-400 font-mono">
+                    4,38 TWh/rok &middot; WUE 0,21 + produkcja energii ~2,5 l/kWh
+                  </span>
+                </div>
+
+                <div className="h-72 w-full pt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={WATER_COMPARISON_CHART_DATA}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                      <XAxis dataKey="podmiot" stroke="#94a3b8" fontSize={12} />
+                      <YAxis
+                        stroke="#94a3b8"
+                        fontSize={11}
+                        domain={[0, 12_000_000]}
+                        tickFormatter={(v) => `${(v as number) / 1_000_000} mln`}
+                        label={{ value: 'm³/rok', angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 11 }}
+                      />
+                      <RechartsTooltip
+                        formatter={(value) => `${Number(value).toLocaleString('pl-PL')} m³/rok`}
+                        contentStyle={{
+                          backgroundColor: '#0f172a',
+                          borderColor: '#334155',
+                          borderRadius: '12px',
+                          color: '#f8fafc'
+                        }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: '12px' }} />
+                      <Bar
+                        dataKey="bezposrednie"
+                        stackId="woda"
+                        fill="#22d3ee"
+                        name="Zużycie bezpośrednie (chłodzenie / mieszkańcy)"
+                      />
+                      <Bar
+                        dataKey="posrednie"
+                        stackId="woda"
+                        fill="#0284c7"
+                        name="Zużycie pośrednie (produkcja energii)"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Tabela bilansu wodnego */}
+              <div className="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                <h3 className="font-semibold text-sm text-slate-200 mb-3">
+                  Bilans wodny Data Center {WATER_ANALYSIS.powerMW} MW (praca 24/7)
+                </h3>
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="text-slate-400 border-b border-slate-800">
+                      <th className="py-1.5 pr-2 font-semibold">Kategoria</th>
+                      <th className="py-1.5 px-2 font-semibold">Wskaźnik (l/kWh)</th>
+                      <th className="py-1.5 pl-2 font-semibold text-right">Roczne zużycie (m³)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-slate-300">
+                    <tr className="border-b border-slate-800/60">
+                      <td className="py-1.5 pr-2">{WATER_ANALYSIS.direct.label}</td>
+                      <td className="py-1.5 px-2 font-mono">{WATER_ANALYSIS.direct.factorLabel}</td>
+                      <td className="py-1.5 pl-2 font-mono text-right text-cyan-300">{WATER_ANALYSIS.direct.annualLabel}</td>
+                    </tr>
+                    <tr className="border-b border-slate-800/60">
+                      <td className="py-1.5 pr-2">{WATER_ANALYSIS.indirect.label}</td>
+                      <td className="py-1.5 px-2 font-mono">{WATER_ANALYSIS.indirect.factorLabel}</td>
+                      <td className="py-1.5 pl-2 font-mono text-right text-cyan-300">{WATER_ANALYSIS.indirect.annualLabel}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-2 font-bold text-slate-100">ŁĄCZNIE</td>
+                      <td className="py-1.5 px-2 font-mono font-bold">{WATER_ANALYSIS.total.factorLabel}</td>
+                      <td className="py-1.5 pl-2 font-mono text-right font-bold text-cyan-400">{WATER_ANALYSIS.total.annualLabel}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p className="text-[11px] text-slate-400 mt-2">
+                  Roczny pobór energii: 500 MW × 24 h × 365 dni = {WATER_ANALYSIS.annualEnergyLabel}.
+                  Bełchatów ({WATER_ANALYSIS.belchatow.population.toLocaleString('pl-PL')} mieszkańców × {WATER_ANALYSIS.belchatow.litersPerPersonDay} l/dobę): {WATER_ANALYSIS.belchatow.annualLabel} rocznie.
+                </p>
+              </div>
+
+              {/* Wnioski */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                  <div className="font-bold text-cyan-400 mb-1">~4,1x więcej niż całe miasto</div>
+                  <p className="text-slate-300">
+                    Centrum danych o mocy 500 MW zużywa rocznie (~11,87 mln m³, ponad 11,8 mld litrów)
+                    ok. 4,1 raza więcej wody niż wszyscy mieszkańcy Bełchatowa (~2,87 mln m³) w ciągu całego roku.
+                  </p>
+                </div>
+                <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                  <div className="font-bold text-sky-400 mb-1">Zapas miasta na ~2,9 miesiąca</div>
+                  <p className="text-slate-300">
+                    Woda zużywana przez samo miasto w ciągu roku wystarczyłaby temu obiektowi na ok. 2,9 miesiąca
+                    nieprzerwanej pracy – skala popytu na wodę porównywalna z dodatkowym dużym miastem.
+                  </p>
+                </div>
+                <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                  <div className="font-bold text-blue-400 mb-1">Obciążenie infrastruktury</div>
+                  <p className="text-slate-300">
+                    Inwestycja stanowi istotne obciążenie lokalnej infrastruktury wodno-kanalizacyjnej
+                    (chłodzenie bezpośrednie) oraz krajowego systemu elektroenergetycznego i zasobów
+                    środowiskowych (zużycie pośrednie przy produkcji energii).
                   </p>
                 </div>
               </div>

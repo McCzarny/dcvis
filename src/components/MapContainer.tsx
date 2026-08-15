@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { MapContainer as ReactMapContainer, TileLayer, GeoJSON, Marker, Popup, Tooltip, Polyline, useMap } from 'react-leaflet';
+import { MapContainer as ReactMapContainer, TileLayer, GeoJSON, Marker, Popup, Tooltip, Polyline, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { GISLayer, MapTileProvider } from '../types/gis';
 import { generateFeatureBuffers } from '../utils/geoUtils';
@@ -7,6 +7,7 @@ import { dataCenterGeoJSON } from '../data/geojson/dataCenter';
 import { archeoSiteGeoJSON } from '../data/geojson/archeoSite';
 import dolinaWidawkiFullGeoJSON from '../data/geojson/dolinaWidawki.json';
 import { getResidentialBuildings } from '../data/residentialData';
+import { WATER_ANALYSIS } from '../data/layersRegistry';
 import { Crosshair, Home } from 'lucide-react';
 
 // Stonowany, statyczny marker dla obiektu archeologicznego (bez migania)
@@ -143,6 +144,7 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
   const archeoLayer = layers.find((l) => l.id === 'archeo_site_marker');
   const widawkaLayer = layers.find((l) => l.id === 'dolina_widawki_polygon');
   const residentialLayer = layers.find((l) => l.id === 'residential_buildings_layer');
+  const waterLayer = layers.find((l) => l.id === 'water_consumption_layer');
 
   return (
     <div className="w-full h-full relative">
@@ -296,6 +298,51 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
                 </Popup>
               </GeoJSON>
             ))}
+
+        {/* 4b. WARSTWA: Zużycie Wody – Data Center vs Bełchatów (koła proporcjonalne do zużycia) */}
+        {waterLayer?.visible && (
+          <React.Fragment>
+            {/* Koło: Bełchatów (52 331 mieszkańców) */}
+            <Circle
+              center={WATER_ANALYSIS.belchatow.centerCoords}
+              radius={WATER_ANALYSIS.mapCircles.cityRadiusMeters}
+              pathOptions={{
+                color: '#4f46e5',
+                weight: 2,
+                fillColor: '#818cf8',
+                fillOpacity: (waterLayer.opacity || 1) * 0.3
+              }}
+            >
+              <Tooltip permanent direction="center" className="water-circle-label water-circle-label-city">
+                <div>
+                  <div className="font-bold text-xs uppercase tracking-wide">Bełchatów</div>
+                  <div className="text-[10px] opacity-90">
+                    {WATER_ANALYSIS.belchatow.population.toLocaleString('pl-PL')} mieszk. &middot; {WATER_ANALYSIS.belchatow.annualLabel}/rok
+                  </div>
+                </div>
+              </Tooltip>
+            </Circle>
+
+            {/* Koło: Data Center 500 MW */}
+            <Circle
+              center={dcCenterCoord}
+              radius={WATER_ANALYSIS.mapCircles.dcRadiusMeters}
+              pathOptions={{
+                color: '#0891b2',
+                weight: 2,
+                fillColor: '#22d3ee',
+                fillOpacity: (waterLayer.opacity || 1) * 0.3
+              }}
+            >
+              <Tooltip permanent direction="bottom" offset={[0, 26]} className="water-circle-label">
+                <div>
+                  <div className="font-bold text-xs uppercase tracking-wide">Data Center 500 MW</div>
+                  <div className="text-[10px] opacity-90">{WATER_ANALYSIS.total.annualLabel} wody/rok</div>
+                </div>
+              </Tooltip>
+            </Circle>
+          </React.Fragment>
+        )}
 
         {/* 5. WARSTWA: Poligon Data Center z Trwałą Etykietą Nazwy */}
         {dcLayer?.visible && (

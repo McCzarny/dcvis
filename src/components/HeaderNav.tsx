@@ -62,7 +62,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
         <button
           onClick={onOpenAnalytics}
           className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold transition-all shadow-sm"
-          title="Otwórz analizę wykresową hałasu i temperatury"
+          title="Otwórz analizę wykresową hałasu, temperatury i zużycia wody"
         >
           <BarChart2 className="w-4 h-4" />
           <span className="hidden sm:inline">Wykresy i Symulator</span>
