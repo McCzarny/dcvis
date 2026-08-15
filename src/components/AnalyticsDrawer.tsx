@@ -326,7 +326,7 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
                       <Bar
                         dataKey="posrednie"
                         stackId="woda"
-                        fill="#0284c7"
+                        fill="#60b0d7"
                         name="Zużycie pośrednie (produkcja energii)"
                       />
                     </BarChart>
