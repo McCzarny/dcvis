@@ -11,23 +11,31 @@ import {
   CartesianGrid,
   ReferenceLine,
   Legend,
-  Area
+  Area,
+  LabelList
 } from 'recharts';
 import {
   NOISE_DECAY_CHART_DATA,
   THERMAL_ELEVATION_CHART_DATA,
   WATER_COMPARISON_CHART_DATA,
-  WATER_ANALYSIS
+  WATER_ANALYSIS,
+  ENERGY_COMPARISON_CHART_DATA,
+  ENERGY_ANALYSIS
 } from '../data/layersRegistry';
-import { X, Volume2, Thermometer, Wind, Activity, Droplets } from 'lucide-react';
+import { X, Volume2, Thermometer, Wind, Activity, Droplets, Zap } from 'lucide-react';
 
 interface AnalyticsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const formatGwhLabel = (gwh: number) =>
+  gwh >= 1000
+    ? `${(gwh / 1000).toLocaleString('pl-PL', { maximumFractionDigits: 2 })} TWh`
+    : `${gwh.toLocaleString('pl-PL', { maximumFractionDigits: 1 })} GWh`;
+
 export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'noise' | 'thermal' | 'water'>('noise');
+  const [activeTab, setActiveTab] = useState<'noise' | 'thermal' | 'water' | 'energy'>('noise');
   const [windInversion, setWindInversion] = useState(false);
 
   if (!isOpen) return null;
@@ -58,10 +66,10 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
             </div>
             <div>
               <h2 className="font-bold text-base text-slate-100">
-                Wykresy Oddziaływania: Hałas, Mikroklimat i Zużycie Wody
+                Wykresy Oddziaływania: Hałas, Mikroklimat, Woda i Energia
               </h2>
               <p className="text-xs text-slate-400">
-                Data Center Domiechowice - Symulacja spadku hałasu, wzrostu temperatury i bilansu wodnego
+                Data Center Domiechowice - Symulacja spadku hałasu, wzrostu temperatury, bilansu wodnego i energetycznego
               </p>
             </div>
           </div>
@@ -111,6 +119,18 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
             >
               <Droplets className="w-4 h-4" />
               <span>Bilans Wodny (DC vs Bełchatów)</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('energy')}
+              className={`px-4 py-2.5 rounded-t-xl text-xs font-bold flex items-center space-x-2 border-t border-x transition-all ${
+                activeTab === 'energy'
+                  ? 'bg-slate-900 text-yellow-400 border-slate-700 shadow-md'
+                  : 'text-slate-200 border-transparent hover:text-slate-100 bg-slate-800/30'
+              }`}
+            >
+              <Zap className="w-4 h-4" />
+              <span>Bilans Energetyczny (DC vs Bełchatów)</span>
             </button>
           </div>
 
@@ -283,7 +303,7 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
                 </div>
               </div>
             </div>
-          ) : (
+          ) : activeTab === 'water' ? (
             <div className="space-y-4">
               <div className="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
                 <div className="flex items-center justify-between mb-2">
@@ -393,6 +413,123 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
                     Inwestycja stanowi istotne obciążenie lokalnej infrastruktury wodno-kanalizacyjnej
                     (chłodzenie bezpośrednie) oraz krajowego systemu elektroenergetycznego i zasobów
                     środowiskowych (zużycie pośrednie przy produkcji energii).
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-sm text-slate-200">
+                    Roczne Zużycie Energii – Data Center 500 MW vs Mieszkańcy Bełchatowa
+                  </h3>
+                  <span className="text-xs text-yellow-400 font-mono">
+                    500 MW &middot; 24 h &middot; 365 dni = 4,38 TWh
+                  </span>
+                </div>
+
+                <div className="h-72 w-full pt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={ENERGY_COMPARISON_CHART_DATA}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                      <XAxis dataKey="podmiot" stroke="#94a3b8" fontSize={12} />
+                      <YAxis
+                        stroke="#94a3b8"
+                        fontSize={11}
+                        scale="log"
+                        domain={[10, 10000]}
+                        ticks={[10, 100, 1000, 10000]}
+                        tickFormatter={(v) => `${v}`}
+                        label={{ value: 'GWh/rok (skala logarytmiczna)', angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 11 }}
+                      />
+                      <RechartsTooltip
+                        formatter={(value) => formatGwhLabel(Number(value))}
+                        contentStyle={{
+                          backgroundColor: '#0f172a',
+                          borderColor: '#334155',
+                          borderRadius: '12px',
+                          color: '#f8fafc'
+                        }}
+                      />
+                      <Bar dataKey="gwh" fill="#facc15" name="Roczne zużycie energii">
+                        <LabelList
+                          dataKey="gwh"
+                          position="top"
+                          fill="#f8fafc"
+                          fontSize={12}
+                          formatter={(v: number | string) => formatGwhLabel(Number(v))}
+                        />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Tabela bilansu energetycznego */}
+              <div className="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                <h3 className="font-semibold text-sm text-slate-200 mb-3">
+                  Bilans energetyczny Data Center {ENERGY_ANALYSIS.powerMW} MW (praca 24/7)
+                </h3>
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="text-slate-400 border-b border-slate-800">
+                      <th className="py-1.5 pr-2 font-semibold">Kategoria</th>
+                      <th className="py-1.5 px-2 font-semibold">Wskaźnik</th>
+                      <th className="py-1.5 pl-2 font-semibold text-right">Roczne zużycie</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-slate-300">
+                    <tr className="border-b border-slate-800/60">
+                      <td className="py-1.5 pr-2">Data Center – pobór (praca 24/7)</td>
+                      <td className="py-1.5 px-2 font-mono">{ENERGY_ANALYSIS.powerMW} MW</td>
+                      <td className="py-1.5 pl-2 font-mono text-right text-yellow-300">~4 380 000 000 kWh (4,38 TWh)</td>
+                    </tr>
+                    <tr className="border-b border-slate-800/60">
+                      <td className="py-1.5 pr-2">Bełchatów – mieszkańcy</td>
+                      <td className="py-1.5 px-2 font-mono">{ENERGY_ANALYSIS.belchatow.perCapitaLabel}/mieszkańca</td>
+                      <td className="py-1.5 pl-2 font-mono text-right text-yellow-300">{ENERGY_ANALYSIS.belchatow.annualLabel}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 pr-2 font-bold text-slate-100">Stosunek DC / Bełchatów</td>
+                      <td className="py-1.5 px-2 font-mono font-bold">—</td>
+                      <td className="py-1.5 pl-2 font-mono text-right font-bold text-yellow-400">
+                        ~{ENERGY_ANALYSIS.ratioVsCity.toLocaleString('pl-PL')}x
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p className="text-[11px] text-slate-400 mt-2">
+                  GUS 2024 (Bank Danych Lokalnych): {ENERGY_ANALYSIS.belchatow.perCapitaLabel} na mieszkańca Bełchatowa.
+                  Bełchatów ({ENERGY_ANALYSIS.belchatow.population.toLocaleString('pl-PL')} mieszk.): {ENERGY_ANALYSIS.belchatow.annualLabel} rocznie.
+                </p>
+              </div>
+
+              {/* Wnioski */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                  <div className="font-bold text-yellow-400 mb-1">
+                    ~{ENERGY_ANALYSIS.ratioVsCity.toLocaleString('pl-PL')}x więcej niż całe miasto
+                  </div>
+                  <p className="text-slate-300">
+                    Centrum danych o mocy 500 MW zużywa rocznie ok. 4,38 TWh – ponad{' '}
+                    {ENERGY_ANALYSIS.ratioVsCity.toLocaleString('pl-PL')} razy więcej energii elektrycznej
+                    niż wszyscy mieszkańcy Bełchatowa (~34,7 GWh) w ciągu całego roku.
+                  </p>
+                </div>
+                <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                  <div className="font-bold text-amber-400 mb-1">Całoroczny prąd miasta na ~2,9 dnia</div>
+                  <p className="text-slate-300">
+                    Energia zużywana przez całe miasto w ciągu roku pokryłaby zapotrzebowanie tego obiektu
+                    na ok. 2,9 dnia nieprzerwanej pracy – skala zapotrzebowania porównywalna z dużą aglomeracją.
+                  </p>
+                </div>
+                <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                  <div className="font-bold text-orange-400 mb-1">Obciążenie sieci elektroenergetycznej</div>
+                  <p className="text-slate-300">
+                    Pobór rzędu 500 MW (4,38 TWh/rok) to istotne obciążenie krajowego systemu
+                    elektroenergetycznego – porównywalne z zapotrzebowaniem dużego miasta, wraz z kosztami
+                    środowiskowymi produkcji energii.
                   </p>
                 </div>
               </div>

@@ -14,7 +14,7 @@ export const App: React.FC = () => {
   const [tileProvider, setTileProvider] = useState<MapTileProvider>('osm');
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isProjectDocsOpen, setIsProjectDocsOpen] = useState(false);
-  const [activePreset, setActivePreset] = useState<'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | 'water' | null>('continuous_noise');
+  const [activePreset, setActivePreset] = useState<'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | 'water' | 'energy' | null>('continuous_noise');
   
   // Inicjalizuj preset "Hałas wentylatorów" na starcie
   useEffect(() => {
@@ -33,7 +33,7 @@ export const App: React.FC = () => {
     );
   };
 
-  const handleApplyPreset = (preset: 'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | 'water' | null) => {
+  const handleApplyPreset = (preset: 'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | 'water' | 'energy' | null) => {
     // Set the active preset (radio button behavior)
     setActivePreset(preset);
 
@@ -59,6 +59,8 @@ export const App: React.FC = () => {
           shouldBeVisible = layer.id === 'residential_buildings_layer';
         } else if (preset === 'water') {
           shouldBeVisible = layer.id === 'water_consumption_layer';
+        } else if (preset === 'energy') {
+          shouldBeVisible = layer.id === 'energy_consumption_layer';
         }
 
         return { ...layer, visible: shouldBeVisible };

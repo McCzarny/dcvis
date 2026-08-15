@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { GISLayer } from '../types/gis';
-import { Layers, Eye, EyeOff, Sliders, ChevronLeft, ChevronRight, Volume2, ShieldAlert, Thermometer, ShieldCheckIcon, MapPin, Droplets } from 'lucide-react';
+import { Layers, Eye, EyeOff, Sliders, ChevronLeft, ChevronRight, Volume2, ShieldAlert, Thermometer, ShieldCheckIcon, MapPin, Droplets, Zap } from 'lucide-react';
 
 interface LayerControlPanelProps {
   layers: GISLayer[];
   onToggleLayer: (id: string) => void;
   onChangeOpacity: (id: string, opacity: number) => void;
-  onApplyPreset: (preset: 'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | 'water' | null) => void;
-  activePreset: 'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | 'water' | null;
+  onApplyPreset: (preset: 'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | 'water' | 'energy' | null) => void;
+  activePreset: 'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | 'water' | 'energy' | null;
 }
 
 export const LayerControlPanel: React.FC<LayerControlPanelProps> = ({
@@ -56,6 +56,12 @@ export const LayerControlPanel: React.FC<LayerControlPanelProps> = ({
       label: 'Zużycie wody (DC vs Bełchatów)',
       color: 'bg-cyan-50 border-cyan-200 text-cyan-900 hover:bg-cyan-100',
       icon: <Droplets className="w-3.5 h-3.5 text-cyan-600" />
+    },
+    {
+      id: 'energy' as const,
+      label: 'Zużycie prądu (DC vs Bełchatów)',
+      color: 'bg-yellow-50 border-yellow-300 text-yellow-900 hover:bg-yellow-100',
+      icon: <Zap className="w-3.5 h-3.5 text-yellow-600" />
     }
   ];
 

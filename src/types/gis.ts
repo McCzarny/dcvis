@@ -1,4 +1,4 @@
-export type LayerCategory = 'inwestycja' | 'srodowisko' | 'akustyka' | 'termika' | 'zabudowa' | 'planowanie' | 'woda';
+export type LayerCategory = 'inwestycja' | 'srodowisko' | 'akustyka' | 'termika' | 'zabudowa' | 'planowanie' | 'woda' | 'energia';
 
 export type MapTileProvider = 'osm' | 'satellite';
 
@@ -13,7 +13,7 @@ export interface GISLayer {
   fillColor: string;
   dashArray?: string;
   weight?: number;
-  type: 'geojson' | 'buffer_ring' | 'marker' | 'residential_markers' | 'water_consumption';
+  type: 'geojson' | 'buffer_ring' | 'marker' | 'residential_markers' | 'water_consumption' | 'energy_consumption';
   geoJsonData?: any;
   buffers?: {
     distanceMeters: number;

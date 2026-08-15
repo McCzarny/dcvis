@@ -244,6 +244,23 @@ export const INITIAL_LAYERS: GISLayer[] = [
     ]
   },
   {
+    id: 'energy_consumption_layer',
+    name: 'Zużycie Prądu – Data Center vs Bełchatów',
+    category: 'energia',
+    description: 'Dwa koła o powierzchni proporcjonalnej do rocznego zużycia energii elektrycznej: Data Center 500 MW (~4,38 TWh/rok, praca 24/7) oraz Bełchatów (~34,7 GWh/rok, 52 331 mieszk. × 662,7 kWh – GUS 2024). Szczegółowe porównanie w panelu legendy.',
+    visible: false,
+    opacity: 1,
+    color: '#ca8a04', // yellow-600
+    fillColor: '#facc15',
+    weight: 2,
+    type: 'energy_consumption',
+    sources: [
+      'GUS – Bank Danych Lokalnych (BDL), zużycie energii elektrycznej (2024 r.): 662,7 kWh na mieszkańca',
+      'https://bdl.stat.gov.pl/',
+      'Karta Informacyjna Przedsięwzięcia (KIP) – moc centrum danych: 500 MW'
+    ]
+  },
+  {
     id: 'dolina_widawki_polygon',
     name: 'Obszar Chronionego Krajobrazu Doliny Widawki',
     category: 'srodowisko',
@@ -346,5 +363,47 @@ export const WATER_COMPARISON_CHART_DATA = [
     bezposrednie: WATER_ANALYSIS.belchatow.annualM3,
     posrednie: 0,
     note: '52 331 mieszkańców × 150 l/dobę × 365 dni'
+  }
+];
+
+// --- Bilans energetyczny: Data Center 500 MW vs mieszkańcy Bełchatowa ---
+export const ENERGY_ANALYSIS = {
+  powerMW: 500,
+  annualEnergyKWh: 4_380_000_000, // 500 MW × 24 h × 365 dni = 4,38 TWh
+  annualEnergyLabel: '4 380 000 000 kWh (4,38 TWh)',
+  dc: {
+    label: 'Pobór Data Center (praca 24/7)',
+    annualKWh: 4_380_000_000,
+    annualLabel: '~4 380 000 000 kWh (4,38 TWh)',
+    annualGWh: 4_380
+  },
+  belchatow: {
+    population: 52_331,
+    perCapitaKWh: 662.7,
+    perCapitaLabel: '662,7 kWh',
+    annualKWh: 34_679_753.7,
+    annualLabel: '~34 680 000 kWh (~34,7 GWh)',
+    annualGWh: 34.68,
+    centerCoords: [51.36239, 19.36522] as [number, number] // 51°21'44.6"N 19°21'54.8"E
+  },
+  mapCircles: {
+    dcRadiusMeters: 2328.6,
+    cityRadiusMeters: 207,
+    scaleNote: 'Pola powierzchni kół proporcjonalne do rocznego zużycia energii'
+  },
+  ratioVsCity: 126.3,
+  cityEnergyForDcDays: 2.9
+};
+
+export const ENERGY_COMPARISON_CHART_DATA = [
+  {
+    podmiot: 'Data Center 500 MW',
+    gwh: ENERGY_ANALYSIS.dc.annualGWh,
+    note: '500 MW × 24 h × 365 dni'
+  },
+  {
+    podmiot: 'Bełchatów (52 331 mieszk.)',
+    gwh: ENERGY_ANALYSIS.belchatow.annualGWh,
+    note: '662,7 kWh/mieszkańca (GUS 2024) × 52 331'
   }
 ];

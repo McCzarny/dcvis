@@ -123,28 +123,45 @@
   border-top-color: rgba(15, 23, 42, 0.9) !important;
 }
 
-/* Etykiety kół zużycia wody (Data Center / Bełchatów) */
-.water-circle-label {
-  background: rgba(8, 145, 178, 0.92) !important;
+/* Etykiety kół zużycia (woda / prąd): Data Center i Bełchatów */
+.consumption-circle-label {
+  background: rgba(15, 23, 42, 0.92) !important;
   border: 1px solid rgba(255, 255, 255, 0.8) !important;
   color: #ffffff !important;
   font-weight: 700 !important;
   font-size: 12px !important;
   padding: 4px 8px !important;
   border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3) !important;
   text-align: center !important;
 }
 
-.water-circle-label::before {
+.consumption-circle-label::before {
+  border-top-color: rgba(15, 23, 42, 0.92) !important;
+}
+
+.consumption-circle-label-cyan {
+  background: rgba(8, 145, 178, 0.92) !important;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3) !important;
+}
+
+.consumption-circle-label-cyan::before {
   border-top-color: rgba(8, 145, 178, 0.92) !important;
 }
 
-.water-circle-label-city {
+.consumption-circle-label-indigo {
   background: rgba(79, 70, 229, 0.92) !important;
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3) !important;
 }
 
-.water-circle-label-city::before {
+.consumption-circle-label-indigo::before {
   border-top-color: rgba(79, 70, 229, 0.92) !important;
+}
+
+.consumption-circle-label-yellow {
+  background: rgba(202, 138, 4, 0.92) !important;
+  box-shadow: 0 4px 12px rgba(202, 138, 4, 0.3) !important;
+}
+
+.consumption-circle-label-yellow::before {
+  border-top-color: rgba(202, 138, 4, 0.92) !important;
 }

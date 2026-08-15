@@ -8,6 +8,7 @@ import {
   HeartPulse,
   ThermometerSun,
   Droplets,
+  Zap,
   Link2,
   type LucideIcon,
 } from 'lucide-react';
@@ -18,7 +19,7 @@ interface Source {
   note: string;
 }
 
-type Accent = 'sky' | 'rose' | 'purple' | 'indigo' | 'amber' | 'cyan';
+type Accent = 'sky' | 'rose' | 'purple' | 'indigo' | 'amber' | 'cyan' | 'yellow';
 
 interface MethodCard {
   id: string;
@@ -74,6 +75,13 @@ const accentStyles: Record<
     iconColor: 'text-cyan-400',
     title: 'text-cyan-300',
     source: 'text-cyan-500',
+  },
+  yellow: {
+    box: 'bg-yellow-950/20 border-yellow-800/40',
+    icon: 'bg-yellow-950/80 border-yellow-500/40',
+    iconColor: 'text-yellow-400',
+    title: 'text-yellow-300',
+    source: 'text-yellow-500',
   },
 };
 
@@ -251,6 +259,40 @@ const cards: MethodCard[] = [
       },
     ],
   },
+  {
+    id: 'bilans-energetyczny',
+    title: 'Bilans energetyczny – zużycie energii elektrycznej (500 MW)',
+    icon: Zap,
+    accent: 'yellow',
+    description: (
+      <div className="space-y-2">
+        <p>
+          Roczny pobór energii dla mocy <strong>500 MW przy pracy 24/7</strong> wynosi{' '}
+          <strong>4 380 000 000 kWh (4,38 TWh)</strong>. Według <strong>GUS (BDL, 2024)</strong>{' '}
+          jeden mieszkaniec Bełchatowa zużył średnio <strong>662,7 kWh</strong>, co przy{' '}
+          <strong>52 331 mieszkańcach</strong> daje ok. <strong>34 679 754 kWh (~34,7 GWh)</strong>{' '}
+          rocznie.
+        </p>
+        <p>
+          Centrum danych zużywa zatem ok. <strong>126 razy więcej energii elektrycznej</strong> niż
+          wszyscy mieszkańcy Bełchatowa, a całoroczny pobór miasta wystarczyłby obiektowi na ok.{' '}
+          <strong>2,9 dnia</strong> pracy. To skala porównywalna z zapotrzebowaniem dużej
+          aglomeracji – istotne obciążenie krajowego systemu elektroenergetycznego.
+        </p>
+      </div>
+    ),
+    sources: [
+      {
+        label: 'GUS – Bank Danych Lokalnych (BDL)',
+        url: 'https://bdl.stat.gov.pl/',
+        note: 'Zużycie energii elektrycznej na mieszkańca Bełchatowa w 2024 r.: 662,7 kWh.',
+      },
+      {
+        label: 'Karta Informacyjna Przedsięwzięcia (KIP)',
+        note: 'Moc centrum danych: 500 MW (IT) – założenie pracy ciągłej 24/7 przez cały rok.',
+      },
+    ],
+  },
 ];
 
 interface ProjectDocsModalProps {
@@ -275,7 +317,7 @@ export const ProjectDocsModal: React.FC<ProjectDocsModalProps> = ({ isOpen, onCl
                 Metodologia & Źródła
               </h2>
               <p className="text-xs text-slate-400">
-                Założenia modeli (akustyka, mikroklimat, bilans wodny), wpływ na zdrowie i bibliografia
+                Założenia modeli (akustyka, mikroklimat, bilans wodny i energetyczny), wpływ na zdrowie i bibliografia
               </p>
             </div>
           </div>

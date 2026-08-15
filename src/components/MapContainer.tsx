@@ -7,7 +7,7 @@ import { dataCenterGeoJSON } from '../data/geojson/dataCenter';
 import { archeoSiteGeoJSON } from '../data/geojson/archeoSite';
 import dolinaWidawkiFullGeoJSON from '../data/geojson/dolinaWidawki.json';
 import { getResidentialBuildings } from '../data/residentialData';
-import { WATER_ANALYSIS } from '../data/layersRegistry';
+import { WATER_ANALYSIS, ENERGY_ANALYSIS } from '../data/layersRegistry';
 import { Crosshair, Home } from 'lucide-react';
 
 // Stonowany, statyczny marker dla obiektu archeologicznego (bez migania)
@@ -145,6 +145,7 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
   const widawkaLayer = layers.find((l) => l.id === 'dolina_widawki_polygon');
   const residentialLayer = layers.find((l) => l.id === 'residential_buildings_layer');
   const waterLayer = layers.find((l) => l.id === 'water_consumption_layer');
+  const energyLayer = layers.find((l) => l.id === 'energy_consumption_layer');
 
   return (
     <div className="w-full h-full relative">
@@ -313,7 +314,7 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
                 fillOpacity: (waterLayer.opacity || 1) * 0.3
               }}
             >
-              <Tooltip permanent direction="center" className="water-circle-label water-circle-label-city">
+              <Tooltip permanent direction="center" className="consumption-circle-label consumption-circle-label-indigo">
                 <div>
                   <div className="font-bold text-xs uppercase tracking-wide">Bełchatów</div>
                   <div className="text-[10px] opacity-90">
@@ -334,10 +335,55 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
                 fillOpacity: (waterLayer.opacity || 1) * 0.3
               }}
             >
-              <Tooltip permanent direction="bottom" offset={[0, 26]} className="water-circle-label">
+              <Tooltip permanent direction="bottom" offset={[0, 26]} className="consumption-circle-label consumption-circle-label-cyan">
                 <div>
                   <div className="font-bold text-xs uppercase tracking-wide">Data Center 500 MW</div>
                   <div className="text-[10px] opacity-90">{WATER_ANALYSIS.total.annualLabel}/rok</div>
+                </div>
+              </Tooltip>
+            </Circle>
+          </React.Fragment>
+        )}
+
+        {/* 4c. WARSTWA: Zużycie Prądu – Data Center vs Bełchatów (koła proporcjonalne do zużycia) */}
+        {energyLayer?.visible && (
+          <React.Fragment>
+            {/* Koło: Bełchatów (52 331 mieszkańców) */}
+            <Circle
+              center={ENERGY_ANALYSIS.belchatow.centerCoords}
+              radius={ENERGY_ANALYSIS.mapCircles.cityRadiusMeters}
+              pathOptions={{
+                color: '#4f46e5',
+                weight: 2,
+                fillColor: '#818cf8',
+                fillOpacity: (energyLayer.opacity || 1) * 0.3
+              }}
+            >
+              <Tooltip permanent direction="top" offset={[0, -6]} className="consumption-circle-label consumption-circle-label-indigo">
+                <div>
+                  <div className="font-bold text-xs uppercase tracking-wide">Bełchatów</div>
+                  <div className="text-[10px] opacity-90">
+                    {ENERGY_ANALYSIS.belchatow.population.toLocaleString('pl-PL')} mieszk. &middot; {ENERGY_ANALYSIS.belchatow.annualLabel}/rok
+                  </div>
+                </div>
+              </Tooltip>
+            </Circle>
+
+            {/* Koło: Data Center 500 MW */}
+            <Circle
+              center={dcCenterCoord}
+              radius={ENERGY_ANALYSIS.mapCircles.dcRadiusMeters}
+              pathOptions={{
+                color: '#ca8a04',
+                weight: 2,
+                fillColor: '#facc15',
+                fillOpacity: (energyLayer.opacity || 1) * 0.3
+              }}
+            >
+              <Tooltip permanent direction="bottom" offset={[0, 26]} className="consumption-circle-label consumption-circle-label-yellow">
+                <div>
+                  <div className="font-bold text-xs uppercase tracking-wide">Data Center 500 MW</div>
+                  <div className="text-[10px] opacity-90">{ENERGY_ANALYSIS.dc.annualLabel} prądu/rok</div>
                 </div>
               </Tooltip>
             </Circle>

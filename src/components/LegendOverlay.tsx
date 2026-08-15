@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GISLayer } from '../types/gis';
-import { WATER_ANALYSIS } from '../data/layersRegistry';
+import { WATER_ANALYSIS, ENERGY_ANALYSIS } from '../data/layersRegistry';
 import { HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface LegendOverlayProps {
@@ -9,6 +9,11 @@ interface LegendOverlayProps {
 
 const formatMln = (m3: number) =>
   (m3 / 1_000_000).toLocaleString('pl-PL', { maximumFractionDigits: 2 });
+
+const formatGwh = (gwh: number) =>
+  gwh >= 1000
+    ? `${(gwh / 1000).toLocaleString('pl-PL', { maximumFractionDigits: 2 })} TWh`
+    : `${gwh.toLocaleString('pl-PL', { maximumFractionDigits: 1 })} GWh`;
 
 export const LegendOverlay: React.FC<LegendOverlayProps> = ({ layers }) => {
   const [collapsed, setCollapsed] = useState(false);
@@ -103,6 +108,50 @@ export const LegendOverlay: React.FC<LegendOverlayProps> = ({ layers }) => {
                       Centrum danych zużywa ok. <strong>{WATER_ANALYSIS.ratioVsCity.toLocaleString('pl-PL')} raza więcej wody</strong> niż
                       wszyscy mieszkańcy Bełchatowa. Roczne zużycie miasta wystarczyłoby obiektowi na ok.{' '}
                       <strong>{WATER_ANALYSIS.cityWaterForDcMonths.toLocaleString('pl-PL')} miesiąca</strong> pracy.
+                    </div>
+                  </div>
+                )}
+
+                {/* Panel porównania zużycia energii (Data Center vs Bełchatów) */}
+                {layer.id === 'energy_consumption_layer' && (
+                  <div className="mt-1.5 space-y-2">
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-[11px] text-slate-700">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-yellow-400 border border-yellow-600" />
+                          <span>Data Center 500 MW (praca 24/7)</span>
+                        </div>
+                        <span className="font-mono text-slate-800 font-semibold">
+                          {formatGwh(ENERGY_ANALYSIS.dc.annualGWh)}/rok
+                        </span>
+                      </div>
+                      <div className="pl-4 space-y-0.5 text-[10px] text-slate-500">
+                        <div className="flex items-center justify-between">
+                          <span>– 500 MW × 24 h × 365 dni</span>
+                          <span className="font-mono">~4 380 000 000 kWh</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-slate-700">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-indigo-400 border border-indigo-600" />
+                          <span>Bełchatów ({ENERGY_ANALYSIS.belchatow.population.toLocaleString('pl-PL')} mieszk.)</span>
+                        </div>
+                        <span className="font-mono text-slate-800 font-semibold">
+                          {formatGwh(ENERGY_ANALYSIS.belchatow.annualGWh)}/rok
+                        </span>
+                      </div>
+                      <div className="pl-4 space-y-0.5 text-[10px] text-slate-500">
+                        <div className="flex items-center justify-between">
+                          <span>– {ENERGY_ANALYSIS.belchatow.perCapitaLabel}/mieszkańca (GUS 2024)</span>
+                          <span className="font-mono">~34 680 000 kWh</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-2 text-[11px] leading-relaxed text-yellow-900">
+                      Centrum danych zużywa ok. <strong>{ENERGY_ANALYSIS.ratioVsCity.toLocaleString('pl-PL')} razy więcej prądu</strong> niż
+                      wszyscy mieszkańcy Bełchatowa. Roczne zużycie miasta wystarczyłoby obiektowi na ok.{' '}
+                      <strong>{ENERGY_ANALYSIS.cityEnergyForDcDays.toLocaleString('pl-PL')} dni</strong> pracy.
                     </div>
                   </div>
                 )}
