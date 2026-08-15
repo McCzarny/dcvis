@@ -337,7 +337,7 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
               <Tooltip permanent direction="bottom" offset={[0, 26]} className="water-circle-label">
                 <div>
                   <div className="font-bold text-xs uppercase tracking-wide">Data Center 500 MW</div>
-                  <div className="text-[10px] opacity-90">{WATER_ANALYSIS.total.annualLabel} wody/rok</div>
+                  <div className="text-[10px] opacity-90">{WATER_ANALYSIS.total.annualLabel}/rok</div>
                 </div>
               </Tooltip>
             </Circle>
