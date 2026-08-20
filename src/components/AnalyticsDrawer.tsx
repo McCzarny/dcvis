@@ -22,7 +22,7 @@ import {
   ENERGY_COMPARISON_CHART_DATA,
   ENERGY_ANALYSIS
 } from '../data/layersRegistry';
-import { X, Volume2, Thermometer, Wind, Activity, Droplets, Zap } from 'lucide-react';
+import { X, Volume2, Thermometer, Activity, Droplets, Zap } from 'lucide-react';
 
 interface AnalyticsDrawerProps {
   isOpen: boolean;
@@ -36,22 +36,18 @@ const formatGwhLabel = (gwh: number) =>
 
 export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<'noise' | 'thermal' | 'water' | 'energy'>('noise');
-  const [windInversion, setWindInversion] = useState(false);
 
   if (!isOpen) return null;
 
-  // Obliczanie modyfikatora szumu przy inwersji nocnej (model 1/r^1.5)
+  // Obliczanie szumu w warunkach neutralnych oraz przy nocnej inwersji (model 1/r^1.5, +5 dBA od 500 m)
   const chartNoiseData = NOISE_DECAY_CHART_DATA.map((item) => {
-    let effCont = item.noiseContinuous;
-    let effGen = item.noiseGenerator;
-    if (windInversion && item.distance >= 500) {
-      effCont += 5;
-      if (effGen != null) effGen += 5;
-    }
+    const inversion = item.distance >= 500;
     return {
       ...item,
-      effectiveNoiseContinuous: effCont,
-      effectiveNoiseGenerator: effGen != null ? effGen : undefined
+      neutralNoiseContinuous: item.noiseContinuous,
+      neutralNoiseGenerator: item.noiseGenerator,
+      inversionNoiseContinuous: inversion ? item.noiseContinuous + 5 : item.noiseContinuous,
+      inversionNoiseGenerator: item.noiseGenerator != null ? item.noiseGenerator + (inversion ? 5 : 0) : undefined
     };
   });
 
@@ -133,23 +129,6 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
               <span>Bilans Energetyczny (DC vs Bełchatów)</span>
             </button>
           </div>
-
-          {/* Kontrolki symulacji dla zakładki hałasu */}
-          {activeTab === 'noise' && (
-            <div className="flex items-center space-x-3 text-xs pb-2">
-              <button
-                onClick={() => setWindInversion(!windInversion)}
-                className={`px-3 py-1.5 rounded-lg border flex items-center space-x-1.5 transition-all ${
-                  windInversion
-                    ? 'bg-purple-950 text-purple-300 border-purple-700'
-                    : 'bg-slate-800 text-slate-400 border-slate-700'
-                }`}
-              >
-                <Wind className="w-3.5 h-3.5" />
-                <span>{windInversion ? 'Nocna inwersja & wiatr ON' : 'Warunki neutralne'}</span>
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Zawartość wykresu */}
@@ -180,21 +159,39 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
                           color: '#f8fafc'
                         }}
                       />
+                      <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }} />
                       <Area
                         type="monotone"
-                        dataKey="effectiveNoiseContinuous"
+                        dataKey="neutralNoiseContinuous"
                         fill="rgba(244, 63, 94, 0.12)"
                         stroke="#f43f5e"
                         strokeWidth={3}
-                        name="Hałas ciągły wentylatorów (dBA)"
+                        name="Hałas ciągły wentylatorów (dBA) – warunki neutralne"
                       />
                       <Line
                         type="monotone"
-                        dataKey="effectiveNoiseGenerator"
+                        dataKey="inversionNoiseContinuous"
+                        stroke="#f43f5e"
+                        strokeWidth={2}
+                        strokeDasharray="8 4"
+                        name="Hałas ciągły wentylatorów (dBA) – nocna inwersja & wiatr"
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="neutralNoiseGenerator"
                         stroke="#f97316"
                         strokeWidth={2}
                         strokeDasharray="6 3"
-                        name="Hałas testów diesla (dBA)"
+                        name="Hałas testów diesla (dBA) – warunki neutralne"
+                        connectNulls
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="inversionNoiseGenerator"
+                        stroke="#f97316"
+                        strokeWidth={2}
+                        strokeDasharray="2 3"
+                        name="Hałas testów diesla (dBA) – nocna inwersja & wiatr"
                         connectNulls
                       />
                       <ReferenceLine
