@@ -338,9 +338,23 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
               <Tooltip permanent direction="bottom" offset={[0, 26]} className="consumption-circle-label consumption-circle-label-cyan">
                 <div>
                   <div className="font-bold text-xs uppercase tracking-wide">Data Center 500 MW</div>
-                  <div className="text-[10px] opacity-90">{WATER_ANALYSIS.total.annualLabel}/rok</div>
+                  <div className="text-[10px] opacity-90">Bezpośrednio {WATER_ANALYSIS.direct.annualLabel}/rok</div>
+                  <div className="text-[10px] opacity-90">W sumie {WATER_ANALYSIS.total.annualLabel}/rok</div>
                 </div>
               </Tooltip>
+            </Circle>
+
+            {/* Koło wewnętrzne: Zużycie bezpośrednie Data Center (chłodzenie), na tle zużycia łącznego */}
+            <Circle
+              center={dcCenterCoord}
+              radius={WATER_ANALYSIS.mapCircles.dcDirectRadiusMeters}
+              pathOptions={{
+                color: '#0e7490',
+                weight: 2,
+                fillColor: '#22d3ee',
+                fillOpacity: (waterLayer.opacity || 1) * 0.6
+              }}
+            >
             </Circle>
           </React.Fragment>
         )}

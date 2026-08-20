@@ -344,6 +344,7 @@ export const WATER_ANALYSIS = {
   },
   mapCircles: {
     dcRadiusMeters: 2328.6,
+    dcDirectRadiusMeters: 648.2, // sqrt(919 800 / 11 869 800) × 2328.6 – powierzchnia proporcjonalna do zużycia bezpośredniego
     cityRadiusMeters: 1150,
     scaleNote: 'Pola powierzchni kół proporcjonalne do rocznego zużycia wody'
   },
