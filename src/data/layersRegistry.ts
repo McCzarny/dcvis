@@ -342,9 +342,22 @@ export const WATER_ANALYSIS = {
     annualLabel: '~2 865 000 m³',
     centerCoords: [51.36239, 19.36522] as [number, number] // 51°21'44.6"N 19°21'54.8"E
   },
+  groundwater: {
+    aquiferDepthNote: 'Miąższość wodonośnych osadów czwartorzędu rzadko przekracza 30 m, najczęściej mieści się w przedziale 10–20 m.',
+    waterTableNote: 'Lustro wody stabilizuje się na głębokości od 1 do 20 m, przeważnie w przedziale 2–10 m.',
+    yieldNote: 'Wydajności pojedynczych ujęć do 80 m³/h, przeważnie jednak wynoszą około 10–40 m³/h.',
+    source: 'Prognoza Oddziaływania na Środowisko',
+    maxFlowM3h: 80,
+    typicalFlowM3h: 40,
+    annualMaxM3: 700_800, // 80 m³/h × 24 h × 365 dni
+    annualMaxLabel: '~700 800 m³',
+    annualTypicalM3: 350_400, // 40 m³/h × 24 h × 365 dni
+    annualTypicalLabel: '~350 400 m³'
+  },
   mapCircles: {
     dcRadiusMeters: 2328.6,
     dcDirectRadiusMeters: 648.2, // sqrt(919 800 / 11 869 800) × 2328.6 – powierzchnia proporcjonalna do zużycia bezpośredniego
+    dcGroundwaterRadiusMeters: 399.9, // sqrt(350 400 / 919 800) × 648.2 – roczna wydajność typowego ujęcia (40 m³/h)
     cityRadiusMeters: 1150,
     scaleNote: 'Pola powierzchni kół proporcjonalne do rocznego zużycia wody'
   },

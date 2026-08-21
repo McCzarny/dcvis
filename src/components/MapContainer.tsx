@@ -356,6 +356,26 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
               }}
             >
             </Circle>
+
+            {/* Koło przerywane: Roczna wydajność wód podziemnych (typowe ujęcie 40 m³/h) */}
+            <Circle
+              center={dcCenterCoord}
+              radius={WATER_ANALYSIS.mapCircles.dcGroundwaterRadiusMeters}
+              pathOptions={{
+                color: '#6d28d9',
+                weight: 2,
+                dashArray: '8 6',
+                fillColor: '#a78bfa',
+                fillOpacity: (waterLayer.opacity || 1) * 0.15
+              }}
+            >
+              <Tooltip permanent direction="top" offset={[0, -30]} className="consumption-circle-label consumption-circle-label-purple">
+                <div>
+                  <div className="font-bold text-xs uppercase tracking-wide">Wydajność wód podziemnych (typowe ujęcie)</div>
+                  <div className="text-[10px] opacity-90">{WATER_ANALYSIS.groundwater.annualTypicalLabel}/rok</div>
+                </div>
+              </Tooltip>
+            </Circle>
           </React.Fragment>
         )}
 

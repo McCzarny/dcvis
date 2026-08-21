@@ -388,6 +388,33 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
                 </p>
               </div>
 
+              {/* Wydajność wód podziemnych */}
+              <div className="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                <h3 className="font-semibold text-sm text-slate-200 mb-2">
+                  Wydajność Wód Podziemnych (Warstwa Wodonośna Czwartorzędu)
+                </h3>
+                <ul className="space-y-1.5 text-xs text-slate-300 list-none">
+                  <li className="flex items-start space-x-2">
+                    <span className="text-cyan-400 mt-0.5">&#9679;</span>
+                    <span>{WATER_ANALYSIS.groundwater.aquiferDepthNote}</span>
+                  </li>
+                  <li className="flex items-start space-x-2">
+                    <span className="text-cyan-400 mt-0.5">&#9679;</span>
+                    <span>{WATER_ANALYSIS.groundwater.waterTableNote}</span>
+                  </li>
+                  <li className="flex items-start space-x-2">
+                    <span className="text-cyan-400 mt-0.5">&#9679;</span>
+                    <span>
+                      {WATER_ANALYSIS.groundwater.yieldNote}{' '}
+                      <span className="font-mono text-cyan-300">do 80 m³/h &middot; zwykle 10–40 m³/h</span>
+                    </span>
+                  </li>
+                </ul>
+                <p className="text-[11px] text-slate-500 mt-2">
+                  Źródło: {WATER_ANALYSIS.groundwater.source}
+                </p>
+              </div>
+
               {/* Wnioski */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                 <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">

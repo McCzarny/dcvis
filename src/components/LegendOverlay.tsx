@@ -102,6 +102,21 @@ export const LegendOverlay: React.FC<LegendOverlayProps> = ({ layers }) => {
                           ~{formatMln(WATER_ANALYSIS.belchatow.annualM3)} mln m³/rok
                         </span>
                       </div>
+                      <div className="flex items-center justify-between text-[11px] text-slate-700">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-purple-400 border-2 border-dashed border-purple-600" />
+                          <span>Wydajność wód podziemnych (typowe ujęcie)</span>
+                        </div>
+                        <span className="font-mono text-slate-800 font-semibold">
+                          ~{formatMln(WATER_ANALYSIS.groundwater.annualTypicalM3)} mln m³/rok
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 text-[11px] leading-relaxed text-purple-900">
+                      Wydajność pojedynczych ujęć wód podziemnych (czwartorzęd) zwykle <strong>10–40 m³/h</strong>, do 80 m³/h.
+                      Typowe ujęcie (40 m³/h) daje rocznie ok. <strong>~{formatMln(WATER_ANALYSIS.groundwater.annualTypicalM3)} mln m³</strong> –
+                      mniej niż samo zużycie bezpośrednie na chłodzenie (~{formatMln(WATER_ANALYSIS.direct.annualM3)} mln m³).
                     </div>
 
                     <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-2 text-[11px] leading-relaxed text-cyan-900">
