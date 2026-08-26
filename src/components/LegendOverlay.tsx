@@ -85,7 +85,7 @@ export const LegendOverlay: React.FC<LegendOverlayProps> = ({ layers }) => {
                       </div>
                       <div className="pl-4 space-y-0.5 text-[10px] text-slate-500">
                         <div className="flex items-center justify-between">
-                          <span>– chłodzenie (WUE {WATER_ANALYSIS.direct.factorLabel})</span>
+                          <span>– zużycie bezpośrednie ({WATER_ANALYSIS.direct.factorLabel})</span>
                           <span className="font-mono">~{formatMln(WATER_ANALYSIS.direct.annualM3)} mln m³</span>
                         </div>
                         <div className="flex items-center justify-between">
@@ -116,7 +116,7 @@ export const LegendOverlay: React.FC<LegendOverlayProps> = ({ layers }) => {
                     <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 text-[11px] leading-relaxed text-purple-900">
                       Wydajność pojedynczych ujęć wód podziemnych (czwartorzęd) zwykle <strong>10–40 m³/h</strong>, do 80 m³/h.
                       Typowe ujęcie (40 m³/h) daje rocznie ok. <strong>~{formatMln(WATER_ANALYSIS.groundwater.annualTypicalM3)} mln m³</strong> –
-                      mniej niż samo zużycie bezpośrednie na chłodzenie (~{formatMln(WATER_ANALYSIS.direct.annualM3)} mln m³).
+                      znacznie więcej niż zużycie bezpośrednie na chłodzenie (~{formatMln(WATER_ANALYSIS.direct.annualM3)} mln m³).
                     </div>
 
                     <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-2 text-[11px] leading-relaxed text-cyan-900">

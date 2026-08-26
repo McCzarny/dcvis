@@ -225,7 +225,7 @@ export const INITIAL_LAYERS: GISLayer[] = [
     id: 'water_consumption_layer',
     name: 'Zużycie Wody – Data Center vs Bełchatów',
     category: 'woda',
-    description: 'Dwa koła o powierzchni proporcjonalnej do rocznego zużycia wody: Data Center 500 MW (~11,87 mln m³/rok, chłodzenie WUE 0,21 l/kWh + produkcja energii ~2,5 l/kWh) oraz Bełchatów (~2,87 mln m³/rok, 52 331 mieszk. × 150 l/dobę). Szczegółowe porównanie znajduje się w panelu legendy.',
+    description: 'Dwa koła o powierzchni proporcjonalnej do rocznego zużycia wody: Data Center 500 MW (~10,97 mln m³/rok, zużycie bezpośrednie 50 m³/dobę + produkcja energii ~2,5 l/kWh) oraz Bełchatów (~2,87 mln m³/rok, 52 331 mieszk. × 150 l/dobę). Szczegółowe porównanie znajduje się w panelu legendy.',
     visible: false,
     opacity: 1,
     color: '#0891b2', // cyan-600
@@ -233,8 +233,8 @@ export const INITIAL_LAYERS: GISLayer[] = [
     weight: 2,
     type: 'water_consumption',
     sources: [
-      'EcoEkonomia – Europa pokazuje, jak odpowiedzialnie chłodzić centra danych (WUE w PL ~0,21 l/kWh)',
-      'https://ecoekonomia.pl/europa-pokazuje-jak-odpowiedzialnie-chlodzic-centra-danych/',
+      'Deklaracja wójta podczas konsultacji – bezpośrednie zużycie wody centrum danych: 50 m³/dobę',
+      'https://www.youtube.com/watch?v=yKuA8bCMzoA',
       'GlobEnergia – Ile wody potrzebuje elektrownia węglowa (1,5–4 l/kWh)',
       'https://globenergia.pl/ile-wody-potrzebuje-elektrownia-weglowa-to-nawet-190-l-kwh/',
       'Mojawoda.com – średnie zużycie wody na osobę w Polsce (~150 l/dobę)',
@@ -315,11 +315,10 @@ export const WATER_ANALYSIS = {
   annualEnergyKWh: 4_380_000_000, // 500 MW × 24 h × 365 dni = 4,38 TWh
   annualEnergyLabel: '4 380 000 000 kWh (4,38 TWh)',
   direct: {
-    label: 'Bezpośrednie (chłodzenie – średnie WUE w PL)',
-    factorLKwh: 0.21,
-    factorLabel: '0,21 l/kWh',
-    annualM3: 919_800,
-    annualLabel: '~919 800 m³'
+    label: 'Bezpośrednie (chłodzenie – deklaracja wójta)',
+    factorLabel: '50 m³/dobę',
+    annualM3: 18_250,
+    annualLabel: '~18 250 m³'
   },
   indirect: {
     label: 'Pośrednie (produkcja energii elektrycznej – średnia dla miksu PL)',
@@ -329,11 +328,11 @@ export const WATER_ANALYSIS = {
     annualLabel: '~10 950 000 m³'
   },
   total: {
-    factorLKwh: 2.71,
-    factorLabel: '~2,71 l/kWh',
-    annualM3: 11_869_800,
-    annualLabel: '~11 869 800 m³',
-    annualLitersLabel: '~11,9 mld litrów'
+    factorLKwh: 2.5,
+    factorLabel: '~2,50 l/kWh',
+    annualM3: 10_968_250,
+    annualLabel: '~10 968 250 m³',
+    annualLitersLabel: '~11,0 mld litrów'
   },
   belchatow: {
     population: 52_331,
@@ -356,13 +355,13 @@ export const WATER_ANALYSIS = {
   },
   mapCircles: {
     dcRadiusMeters: 2328.6,
-    dcDirectRadiusMeters: 648.2, // sqrt(919 800 / 11 869 800) × 2328.6 – powierzchnia proporcjonalna do zużycia bezpośredniego
-    dcGroundwaterRadiusMeters: 399.9, // sqrt(350 400 / 919 800) × 648.2 – roczna wydajność typowego ujęcia (40 m³/h)
+    dcDirectRadiusMeters: 91.3, // sqrt(18 250 / 10 968 250) × 2328.6 – powierzchnia proporcjonalna do zużycia bezpośredniego
+    dcGroundwaterRadiusMeters: 608.6, // sqrt(350 400 / 10 968 250) × 2328.6 – roczna wydajność typowego ujęcia (40 m³/h)
     cityRadiusMeters: 1150,
     scaleNote: 'Pola powierzchni kół proporcjonalne do rocznego zużycia wody'
   },
-  ratioVsCity: 4.1,
-  cityWaterForDcMonths: 2.9
+  ratioVsCity: 3.8,
+  cityWaterForDcMonths: 3.1
 };
 
 export const WATER_COMPARISON_CHART_DATA = [
@@ -370,7 +369,7 @@ export const WATER_COMPARISON_CHART_DATA = [
     podmiot: 'Data Center 500 MW',
     bezposrednie: WATER_ANALYSIS.direct.annualM3,
     posrednie: WATER_ANALYSIS.indirect.annualM3,
-    note: 'Chłodzenie (WUE 0,21 l/kWh) + produkcja energii (~2,5 l/kWh)'
+    note: 'Zużycie bezpośrednie (50 m³/dobę) + produkcja energii (~2,5 l/kWh)'
   },
   {
     podmiot: 'Bełchatów (52 331 mieszk.)',

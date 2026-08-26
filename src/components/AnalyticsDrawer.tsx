@@ -308,7 +308,7 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
                     Roczne Zużycie Wody – Data Center 500 MW vs Mieszkańcy Bełchatowa
                   </h3>
                   <span className="text-xs text-cyan-400 font-mono">
-                    4,38 TWh/rok &middot; WUE 0,21 + produkcja energii ~2,5 l/kWh
+                    4,38 TWh/rok &middot; chłodzenie 50 m³/dobę + produkcja energii ~2,5 l/kWh
                   </span>
                 </div>
 
@@ -360,7 +360,7 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
                   <thead>
                     <tr className="text-slate-400 border-b border-slate-800">
                       <th className="py-1.5 pr-2 font-semibold">Kategoria</th>
-                      <th className="py-1.5 px-2 font-semibold">Wskaźnik (l/kWh)</th>
+                      <th className="py-1.5 px-2 font-semibold">Wskaźnik</th>
                       <th className="py-1.5 pl-2 font-semibold text-right">Roczne zużycie (m³)</th>
                     </tr>
                   </thead>
@@ -418,25 +418,25 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
               {/* Wnioski */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                 <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                  <div className="font-bold text-cyan-400 mb-1">~4,1x więcej niż całe miasto</div>
+                  <div className="font-bold text-cyan-400 mb-1">~3,8x więcej niż całe miasto</div>
                   <p className="text-slate-300">
-                    Centrum danych o mocy 500 MW zużywa rocznie (~11,87 mln m³, ponad 11,8 mld litrów)
-                    ok. 4,1 raza więcej wody niż wszyscy mieszkańcy Bełchatowa (~2,87 mln m³) w ciągu całego roku.
+                    Centrum danych o mocy 500 MW zużywa rocznie (~10,97 mln m³, ponad 10,9 mld litrów)
+                    ok. 3,8 raza więcej wody niż wszyscy mieszkańcy Bełchatowa (~2,87 mln m³) w ciągu całego roku.
                   </p>
                 </div>
                 <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                  <div className="font-bold text-sky-400 mb-1">Zapas miasta na ~2,9 miesiąca</div>
+                  <div className="font-bold text-sky-400 mb-1">Zapas miasta na ~3,1 miesiąca</div>
                   <p className="text-slate-300">
-                    Woda zużywana przez samo miasto w ciągu roku wystarczyłaby temu obiektowi na ok. 2,9 miesiąca
+                    Woda zużywana przez samo miasto w ciągu roku wystarczyłaby temu obiektowi na ok. 3,1 miesiąca
                     nieprzerwanej pracy – skala popytu na wodę porównywalna z dodatkowym dużym miastem.
                   </p>
                 </div>
                 <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
                   <div className="font-bold text-blue-400 mb-1">Obciążenie infrastruktury</div>
                   <p className="text-slate-300">
-                    Inwestycja stanowi istotne obciążenie lokalnej infrastruktury wodno-kanalizacyjnej
-                    (chłodzenie bezpośrednie) oraz krajowego systemu elektroenergetycznego i zasobów
-                    środowiskowych (zużycie pośrednie przy produkcji energii).
+                    Zużycie bezpośrednie (cele socjalne) wynosi wg deklaracji wójta 50 m³/dobę (~18 250 m³/rok),
+                    natomiast główne obciążenie stanowi krajowy system elektroenergetyczny i zasoby
+                    środowiskowe (zużycie pośrednie przy produkcji energii).
                   </p>
                 </div>
               </div>
