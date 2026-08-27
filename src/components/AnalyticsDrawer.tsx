@@ -22,7 +22,8 @@ import {
   ENERGY_COMPARISON_CHART_DATA,
   ENERGY_ANALYSIS
 } from '../data/layersRegistry';
-import { X, Volume2, Thermometer, Activity, Droplets, Zap } from 'lucide-react';
+import { X, Volume2, Thermometer, Activity, Droplets, Zap, Factory } from 'lucide-react';
+import { PowerPlantBlocksTab } from './PowerPlantBlocksTab';
 
 interface AnalyticsDrawerProps {
   isOpen: boolean;
@@ -35,7 +36,7 @@ const formatGwhLabel = (gwh: number) =>
     : `${gwh.toLocaleString('pl-PL', { maximumFractionDigits: 1 })} GWh`;
 
 export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'noise' | 'thermal' | 'water' | 'energy'>('noise');
+  const [activeTab, setActiveTab] = useState<'noise' | 'thermal' | 'water' | 'energy' | 'blocks'>('noise');
 
   if (!isOpen) return null;
 
@@ -62,10 +63,11 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
             </div>
             <div>
               <h2 className="font-bold text-base text-slate-100">
-                Wykresy Oddziaływania: Hałas, Mikroklimat, Woda i Energia
+                Wykresy Oddziaływania: Hałas, Mikroklimat, Woda, Energia i Skala Mocy
               </h2>
               <p className="text-xs text-slate-400">
-                Data Center Domiechowice - Symulacja spadku hałasu, wzrostu temperatury, bilansu wodnego i energetycznego
+                Data Center Domiechowice - Symulacja spadku hałasu, wzrostu temperatury, bilansu wodnego, energetycznego
+                oraz skali mocy względem Elektrowni Bełchatów
               </p>
             </div>
           </div>
@@ -79,7 +81,7 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
         </div>
 
         {/* Nawigacja po zakładkach */}
-        <div className="px-6 pt-4 flex items-center justify-between border-b border-slate-800 bg-slate-900/40">
+        <div className="px-6 pt-4 flex items-center justify-between overflow-x-auto border-b border-slate-800 bg-slate-900/40">
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setActiveTab('noise')}
@@ -128,10 +130,19 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
               <Zap className="w-4 h-4" />
               <span>Bilans Energetyczny (DC vs Bełchatów)</span>
             </button>
+            <button
+              onClick={() => setActiveTab('blocks')}
+              className={`px-4 py-2.5 rounded-t-xl text-xs font-bold flex items-center space-x-2 border-t border-x transition-all ${
+                activeTab === 'blocks'
+                  ? 'bg-slate-900 text-sky-400 border-slate-700 shadow-md'
+                  : 'text-slate-200 border-transparent hover:text-slate-100 bg-slate-800/30'
+              }`}
+            >
+              <Factory className="w-4 h-4" />
+              <span>Skala Mocy</span>
+            </button>
           </div>
         </div>
-
-        {/* Zawartość wykresu */}
         <div className="p-6 overflow-y-auto flex-1 space-y-6">
           {activeTab === 'noise' ? (
             <div className="space-y-4">
@@ -441,6 +452,8 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ isOpen, onClos
                 </div>
               </div>
             </div>
+          ) : activeTab === 'blocks' ? (
+            <PowerPlantBlocksTab />
           ) : (
             <div className="space-y-4">
               <div className="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">

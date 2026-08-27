@@ -420,3 +420,60 @@ export const ENERGY_COMPARISON_CHART_DATA = [
     note: '662,7 kWh/mieszkańca (GUS 2024) × 52 331'
   }
 ];
+
+// --- Elektrownia Bełchatów: moc Data Center vs bloki energetyczne ---
+// Bloki nr 2–12 o mocy nominalnej 370–390 MW (przyjęto wartość średnią 380 MW),
+// blok nr 14 o mocy 858 MW. Łączna moc maksymalna stacji wg Wikipedii: 5298 MW.
+export const BELCHATOW_PLANT_INFO = {
+  name: 'Elektrownia Bełchatów',
+  totalMaxMW: 5298,
+  sourceLabel: 'Wikipedia – Elektrownia Bełchatów (moc maksymalna 5298 MW; bloki 2–12 po 370–390 MW, blok nr 14 – 858 MW)'
+} as const;
+
+export const PLANT_STANDARD_BLOCK_MW = 380;
+export const PLANT_LARGE_BLOCK_MW = 858;
+
+export interface PowerPlantBlockInfo {
+  number: number;
+  capacityMW: number;
+}
+
+export const POWER_PLANT_BLOCKS: PowerPlantBlockInfo[] = [
+  ...Array.from({ length: 11 }, (_, i) => ({
+    number: i + 2,
+    capacityMW: PLANT_STANDARD_BLOCK_MW
+  })),
+  { number: 14, capacityMW: PLANT_LARGE_BLOCK_MW }
+];
+
+export type DcScenarioKey = 'dc500' | 'dc1000';
+
+export interface DcScenario {
+  key: DcScenarioKey;
+  powerMW: number;
+  label: string;
+  sublabel: string;
+}
+
+export const DC_SCENARIOS: Record<DcScenarioKey, DcScenario> = {
+  dc500: { key: 'dc500', powerMW: 500, label: '500 MW', sublabel: 'Obecny projekt (KIP)' },
+  dc1000: { key: 'dc1000', powerMW: 1000, label: '1000 MW', sublabel: 'Moc docelowa (wnioskowana)' }
+};
+
+export interface PowerPlantBlockFillState extends PowerPlantBlockInfo {
+  filledMW: number;
+  fillFraction: number;
+}
+
+// Kolejność wypełniania: od bloków 2–12 (rosnąco po numerach), na końcu blok nr 14.
+export function getBlockFillStates(dcPowerMW: number): PowerPlantBlockFillState[] {
+  let remaining = dcPowerMW;
+  return POWER_PLANT_BLOCKS.map((block) => {
+    const filledMW = Math.max(0, Math.min(remaining, block.capacityMW));
+    remaining -= filledMW;
+    return { ...block, filledMW, fillFraction: filledMW / block.capacityMW };
+  });
+}
+
+// Roczna produkcja przeciętnego bloku przy pracy 24/7: 380 MW × 8760 h ≈ 3,33 TWh
+export const STANDARD_BLOCK_ANNUAL_TWH = (PLANT_STANDARD_BLOCK_MW * 8760) / 1_000_000;
