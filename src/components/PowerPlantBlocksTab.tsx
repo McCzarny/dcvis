@@ -97,8 +97,7 @@ export const PowerPlantBlocksTab: React.FC = () => {
         </div>
 
         <p className="text-xs text-slate-300 mb-3">
-          Każdy słupek to jeden czynny blok energetyczny o wysokości proporcjonalnej do mocy. Pobór Data Center wypełnia
-          kolejne bloki – od numeru 2, aż po gigantyczny blok nr 14.{' '}
+          Każdy słupek to jeden czynny blok energetyczny o wysokości proporcjonalnej do mocy.{' '}
           <span className="text-sky-300">{buildScenarioSentence(scenario.powerMW, summary)}</span>.
         </p>
 
