@@ -1,6 +1,6 @@
 import { Feature, Polygon } from 'geojson';
 
-export const dataCenterGeoJSON: Feature<Polygon> = {
+export const domiechowiceGeoJSON: Feature<Polygon> = {
   type: "Feature",
   geometry: {
     type: "Polygon",

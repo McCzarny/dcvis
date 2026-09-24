@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
-import { GISLayer } from '../types/gis';
-import { Layers, Eye, EyeOff, Sliders, ChevronLeft, ChevronRight, Volume2, ShieldAlert, Thermometer, ShieldCheckIcon, MapPin, Droplets, Zap } from 'lucide-react';
+import { GISLayer, PresetKey } from '../types/gis';
+import { DataCenterProfile } from '../data/dataCenters';
+import { getAvailablePresets } from '../data/layersRegistry';
+import { Layers, Eye, EyeOff, Sliders, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface LayerControlPanelProps {
+  dataCenter: DataCenterProfile;
   layers: GISLayer[];
   onToggleLayer: (id: string) => void;
   onChangeOpacity: (id: string, opacity: number) => void;
-  onApplyPreset: (preset: 'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | 'water' | 'energy' | null) => void;
-  activePreset: 'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | 'water' | 'energy' | null;
+  onApplyPreset: (preset: PresetKey | null) => void;
+  activePreset: PresetKey | null;
 }
 
 export const LayerControlPanel: React.FC<LayerControlPanelProps> = ({
+  dataCenter,
   layers,
   onToggleLayer,
   onChangeOpacity,
@@ -20,50 +24,14 @@ export const LayerControlPanel: React.FC<LayerControlPanelProps> = ({
   const [collapsed, setCollapsed] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
-  const presets = [
-    {
-      id: 'continuous_noise' as const,
-      label: 'Hałas wentylatorów',
-      color: 'bg-orange-50 border-orange-200 text-orange-900 hover:bg-orange-100',
-      icon: <Volume2 className="w-3.5 h-3.5 text-orange-600" />
-    },
-    {
-      id: 'generator_noise' as const,
-      label: 'Testy generatorów',
-      color: 'bg-red-50 border-red-200 text-red-900 hover:bg-red-100',
-      icon: <ShieldAlert className="w-3.5 h-3.5 text-red-600" />
-    },
-    {
-      id: 'thermal' as const,
-      label: 'Wpływ na temperaturę',
-      color: 'bg-amber-50 border-amber-200 text-amber-900 hover:bg-amber-100',
-      icon: <Thermometer className="w-3.5 h-3.5 text-amber-600" />
-    },
-    {
-      id: 'protected_areas' as const,
-      label: 'Obszary chronione',
-      color: 'bg-emerald-50 border-emerald-200 text-emerald-900 hover:bg-emerald-100',
-      icon: <ShieldCheckIcon className="w-3.5 h-3.5 text-emerald-600" />
-    },
-    {
-      id: 'residential_distances' as const,
-      label: 'Odległości do zabudowań',
-      color: 'bg-indigo-50 border-indigo-200 text-indigo-900 hover:bg-indigo-100',
-      icon: <MapPin className="w-3.5 h-3.5 text-indigo-600" />
-    },
-    {
-      id: 'water' as const,
-      label: 'Zużycie wody (DC vs Bełchatów)',
-      color: 'bg-cyan-50 border-cyan-200 text-cyan-900 hover:bg-cyan-100',
-      icon: <Droplets className="w-3.5 h-3.5 text-cyan-600" />
-    },
-    {
-      id: 'energy' as const,
-      label: 'Zużycie prądu (DC vs Bełchatów)',
-      color: 'bg-yellow-50 border-yellow-300 text-yellow-900 hover:bg-yellow-100',
-      icon: <Zap className="w-3.5 h-3.5 text-yellow-600" />
-    }
-  ];
+  // Presety widoczne tylko wtedy, gdy jakakolwiek ich warstwa jest dostępna
+  // w wybranym centrum danych (np. "Obszary chronione" tylko dla Domiechowic).
+  const presets = getAvailablePresets(layers).map((preset) => ({
+    id: preset.id,
+    label: preset.label(dataCenter),
+    color: preset.color,
+    icon: <preset.icon className={preset.iconClassName} />
+  }));
 
   return (
     <div

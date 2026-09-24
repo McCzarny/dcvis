@@ -12,6 +12,7 @@ import {
   Link2,
   type LucideIcon,
 } from 'lucide-react';
+import type { DataCenterProfile } from '../data/dataCenters';
 
 interface Source {
   label: string;
@@ -85,7 +86,7 @@ const accentStyles: Record<
   },
 };
 
-const cards: MethodCard[] = [
+const staticCards: MethodCard[] = [
   {
     id: 'model-akustyczny',
     title: 'Model Akustyczny – Założenia Metodologiczne',
@@ -209,7 +210,9 @@ const cards: MethodCard[] = [
       },
     ],
   },
-  {
+];
+
+const domiechowiceWaterCard: MethodCard = {
     id: 'bilans-wodny',
     title: 'Bilans wodny – zużycie wody przez centrum danych (500 MW)',
     icon: Droplets,
@@ -258,8 +261,9 @@ const cards: MethodCard[] = [
         note: 'Liczba mieszkańców Bełchatowa: 52 331.',
       },
     ],
-  },
-  {
+};
+
+const domiechowiceEnergyCard: MethodCard = {
     id: 'bilans-energetyczny',
     title: 'Bilans energetyczny – zużycie energii elektrycznej (500 MW)',
     icon: Zap,
@@ -292,16 +296,94 @@ const cards: MethodCard[] = [
         note: 'Moc centrum danych: 500 MW (IT) – założenie pracy ciągłej 24/7 przez cały rok.',
       },
     ],
-  },
-];
+};
+
+/** Karty bilansu wodnego i energetycznego – treść zależna od wybranego DC. */
+const buildCards = (dc: DataCenterProfile): MethodCard[] => {
+  const cards: MethodCard[] = [...staticCards];
+
+  if (dc.id === 'domiechowice') {
+    cards.push(domiechowiceWaterCard, domiechowiceEnergyCard);
+    return cards;
+  }
+
+  const w = dc.water;
+  cards.push({
+    id: 'bilans-wodny',
+    title: `Bilans wodny – zużycie wody przez centrum danych (${w.powerMW} MW)`,
+    icon: Droplets,
+    accent: 'cyan',
+    description: (
+      <div className="space-y-2">
+        <p>
+          Roczny pobór energii dla mocy{' '}
+          <strong>
+            {w.powerMW} MW przy pracy 24/7
+          </strong>{' '}
+          wynosi <strong>{w.annualEnergyLabel}</strong>. Zużycie wody liczono
+          dwutorowo: <strong>bezpośrednio</strong> – {w.direct.label},{' '}
+          <strong>{w.direct.factorLabel}</strong>, co daje{' '}
+          <strong>{w.direct.annualLabel}</strong> rocznie, oraz{' '}
+          <strong>pośrednio</strong> – wodą zużywaną przy produkcji energii
+          elektrycznej, przyjmując {w.indirect.factorLabel}:{' '}
+          <strong>{w.indirect.annualLabel}</strong>.
+        </p>
+        <p>
+          Łącznie: <strong>{w.total.annualLabel}</strong> rocznie (
+          {w.total.annualLitersLabel}).
+        </p>
+        <p className="text-slate-500">
+          Porównanie zużycia wody z miastem dostępne w zakładce „Bilans Wodny";
+          dane o wodach podziemnych – w przygotowaniu.
+        </p>
+      </div>
+    ),
+    sources: dc.texts.water.docsSources,
+  });
+
+  const e = dc.energy;
+  cards.push({
+    id: 'bilans-energetyczny',
+    title: `Bilans energetyczny – zużycie energii elektrycznej (${e.powerMW} MW)`,
+    icon: Zap,
+    accent: 'yellow',
+    description: (
+      <div className="space-y-2">
+        <p>
+          Roczny pobór energii dla mocy{' '}
+          <strong>
+            {e.powerMW} MW przy pracy 24/7
+          </strong>{' '}
+          wynosi <strong>{e.annualEnergyLabel}</strong> (
+          {e.dc.annualGWh.toLocaleString('pl-PL', { maximumFractionDigits: 1 })}{' '}
+          GWh/rok).
+        </p>
+        <p className="text-slate-500">
+          Porównanie zużycia energii z miastem dostępne w zakładce „Bilans
+          Energetyczny".
+        </p>
+      </div>
+    ),
+    sources: dc.texts.energy.docsSources,
+  });
+
+  return cards;
+};
 
 interface ProjectDocsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  dataCenter: DataCenterProfile;
 }
 
-export const ProjectDocsModal: React.FC<ProjectDocsModalProps> = ({ isOpen, onClose }) => {
+export const ProjectDocsModal: React.FC<ProjectDocsModalProps> = ({
+  isOpen,
+  onClose,
+  dataCenter,
+}) => {
   if (!isOpen) return null;
+
+  const cards = buildCards(dataCenter);
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-fade-in">
@@ -317,7 +399,7 @@ export const ProjectDocsModal: React.FC<ProjectDocsModalProps> = ({ isOpen, onCl
                 Metodologia & Źródła
               </h2>
               <p className="text-xs text-slate-400">
-                Założenia modeli (akustyka, mikroklimat, bilans wodny i energetyczny), wpływ na zdrowie i bibliografia
+                {dataCenter.specs.name} – założenia modeli (akustyka, mikroklimat, bilans wodny i energetyczny), wpływ na zdrowie i bibliografia
               </p>
             </div>
           </div>

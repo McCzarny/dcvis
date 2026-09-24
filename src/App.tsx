@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { GISLayer, MapTileProvider } from './types/gis';
-import { INITIAL_LAYERS } from './data/layersRegistry';
+import { DataCenterKey, GISLayer, MapTileProvider, PresetKey } from './types/gis';
+import { applyPresetToLayers, buildInitialLayers, getAvailablePresets } from './data/layersRegistry';
+import { DataCenterProfile, DEFAULT_DATA_CENTER_ID, getDataCenter } from './data/dataCenters';
 import { HeaderNav } from './components/HeaderNav';
 import { MapContainerComponent } from './components/MapContainer';
 import { LayerControlPanel } from './components/LayerControlPanel';
@@ -9,16 +10,22 @@ import { AnalyticsDrawer } from './components/AnalyticsDrawer';
 import { ProjectDocsModal } from './components/ProjectDocsModal';
 
 export const App: React.FC = () => {
-  const [layers, setLayers] = useState<GISLayer[]>(INITIAL_LAYERS);
+  const [dataCenterId, setDataCenterId] = useState<DataCenterKey>(DEFAULT_DATA_CENTER_ID);
+  const [layers, setLayers] = useState<GISLayer[]>(() =>
+    buildInitialLayers(getDataCenter(DEFAULT_DATA_CENTER_ID))
+  );
   // Domyślnie podkład Standard (OSM)
   const [tileProvider, setTileProvider] = useState<MapTileProvider>('osm');
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isProjectDocsOpen, setIsProjectDocsOpen] = useState(false);
-  const [activePreset, setActivePreset] = useState<'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | 'water' | 'energy' | null>('continuous_noise');
-  
+  const [activePreset, setActivePreset] = useState<PresetKey | null>('continuous_noise');
+
+  const dataCenter: DataCenterProfile = getDataCenter(dataCenterId);
+
   // Inicjalizuj preset "Hałas wentylatorów" na starcie
   useEffect(() => {
     handleApplyPreset('continuous_noise');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleToggleLayer = (id: string) => {
@@ -33,45 +40,40 @@ export const App: React.FC = () => {
     );
   };
 
-  const handleApplyPreset = (preset: 'continuous_noise' | 'generator_noise' | 'thermal' | 'protected_areas' | 'residential_distances' | 'water' | 'energy' | null) => {
-    // Set the active preset (radio button behavior)
+  const handleApplyPreset = (preset: PresetKey | null) => {
     setActivePreset(preset);
+    setLayers((prev) => applyPresetToLayers(prev, preset));
+  };
 
-    setLayers((prev) =>
-      prev.map((layer) => {
-        // Core layer always visible
-        if (layer.id === 'data_center_polygon') {
-          return { ...layer, visible: true };
-        }
+  /**
+   * Zmiana centrum danych: przebudowuje listę warstw (dostępne tylko te,
+   * które obsługują dane DC) i dobiera preset dostępny w nowej lokalizacji.
+   */
+  const handleChangeDataCenter = (id: DataCenterKey) => {
+    if (id === dataCenterId) return;
 
-        // Determine visibility based on active preset
-        let shouldBeVisible = false;
+    const nextDataCenter = getDataCenter(id);
+    const nextLayers = buildInitialLayers(nextDataCenter);
+    const availablePresets = getAvailablePresets(nextLayers).map((p) => p.id);
 
-        if (preset === 'continuous_noise') {
-          shouldBeVisible = ['noise_continuous_buffers', 'residential_buildings_layer'].includes(layer.id);
-        } else if (preset === 'generator_noise') {
-          shouldBeVisible = ['noise_generators_buffers', 'residential_buildings_layer'].includes(layer.id);
-        } else if (preset === 'thermal') {
-          shouldBeVisible = ['thermal_impact_buffers', 'residential_buildings_layer'].includes(layer.id);
-        } else if (preset === 'protected_areas') {
-          shouldBeVisible = ['dolina_widawki_polygon', 'archeo_site_marker'].includes(layer.id);
-        } else if (preset === 'residential_distances') {
-          shouldBeVisible = layer.id === 'residential_buildings_layer';
-        } else if (preset === 'water') {
-          shouldBeVisible = layer.id === 'water_consumption_layer';
-        } else if (preset === 'energy') {
-          shouldBeVisible = layer.id === 'energy_consumption_layer';
-        }
+    let nextPreset: PresetKey | null = activePreset;
+    if (activePreset !== null && !availablePresets.includes(activePreset)) {
+      nextPreset = availablePresets.includes('continuous_noise')
+        ? 'continuous_noise'
+        : (availablePresets[0] ?? null);
+    }
 
-        return { ...layer, visible: shouldBeVisible };
-      })
-    );
+    setDataCenterId(id);
+    setActivePreset(nextPreset);
+    setLayers(applyPresetToLayers(nextLayers, nextPreset));
   };
 
   return (
     <div className="w-screen h-screen flex flex-col relative overflow-hidden bg-slate-100">
       {/* Nagłówek zawsze na wierzchu (z-[2000]) */}
       <HeaderNav
+        dataCenter={dataCenter}
+        onSelectDataCenter={handleChangeDataCenter}
         onOpenAnalytics={() => setIsAnalyticsOpen(true)}
         onOpenProjectDocs={() => setIsProjectDocsOpen(true)}
       />
@@ -79,6 +81,7 @@ export const App: React.FC = () => {
       {/* Kontener mapy */}
       <main className="flex-1 relative w-full h-full">
         <MapContainerComponent
+          dataCenter={dataCenter}
           layers={layers}
           tileProvider={tileProvider}
           onSelectTileProvider={setTileProvider}
@@ -86,6 +89,7 @@ export const App: React.FC = () => {
 
         {/* Panel boczny warstw (z-[1500]) */}
         <LayerControlPanel
+          dataCenter={dataCenter}
           layers={layers}
           onToggleLayer={handleToggleLayer}
           onChangeOpacity={handleChangeOpacity}
@@ -94,16 +98,18 @@ export const App: React.FC = () => {
         />
 
         {/* Legenda (z-20) */}
-        <LegendOverlay layers={layers} />
+        <LegendOverlay dataCenter={dataCenter} layers={layers} />
       </main>
 
       {/* Modal Wykresów i Symulatora (z-[9999]) */}
       <AnalyticsDrawer
+        dataCenter={dataCenter}
         isOpen={isAnalyticsOpen}
         onClose={() => setIsAnalyticsOpen(false)}
       />
 
       <ProjectDocsModal
+        dataCenter={dataCenter}
         isOpen={isProjectDocsOpen}
         onClose={() => setIsProjectDocsOpen(false)}
       />

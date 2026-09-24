@@ -1,5 +1,5 @@
 import * as turf from '@turf/turf';
-import { dataCenterGeoJSON } from './geojson/dataCenter';
+import { Feature, Polygon } from 'geojson';
 
 export interface ResidentialBuilding {
   id: string;
@@ -23,8 +23,8 @@ const RESIDENTIAL_COORDINATES = [
   { lat: 51.358303, lng: 19.323750, name: "Zabudowania Południowo-Wschodnie" }
 ];
 
-export function getResidentialBuildings(): ResidentialBuilding[] {
-  const dcCenter = turf.centerOfMass(dataCenterGeoJSON);
+export function getResidentialBuildings(dcPolygon: Feature<Polygon>): ResidentialBuilding[] {
+  const dcCenter = turf.centerOfMass(dcPolygon);
 
   return RESIDENTIAL_COORDINATES.map((item, index) => {
     const point = turf.point([item.lng, item.lat]);
@@ -34,7 +34,7 @@ export function getResidentialBuildings(): ResidentialBuilding[] {
 
     // Odległość do najbliższego punktu granicy poligonu Data Center
     // Konwertujemy poligon na linie i szukamy nearestPointOnLine
-    const polygonLine = turf.polygonToLine(dataCenterGeoJSON);
+    const polygonLine = turf.polygonToLine(dcPolygon);
     const nearestPoint = turf.nearestPointOnLine(polygonLine as any, point);
     const distBoundaryMeters = Math.round(turf.distance(point, nearestPoint, { units: 'meters' }));
 

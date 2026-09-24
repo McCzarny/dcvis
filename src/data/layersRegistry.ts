@@ -1,59 +1,133 @@
-import { GISLayer, DataCenterSpecs } from '../types/gis';
-import { dataCenterGeoJSON } from './geojson/dataCenter';
+import { DataCenterKey, GISLayer, PresetKey } from '../types/gis';
+import {
+  DataCenterProfile,
+  formatFixed,
+  formatGWh,
+  formatInt,
+  formatMlnM3
+} from './dataCenters';
 import { archeoSiteGeoJSON } from './geojson/archeoSite';
 import dolinaWidawkiFullGeoJSON from './geojson/dolinaWidawki.json';
+import {
+  Droplets,
+  MapPin,
+  ShieldAlert,
+  ShieldCheckIcon,
+  Thermometer,
+  Volume2,
+  Zap,
+  type LucideIcon
+} from 'lucide-react';
 
-export const DATA_CENTER_SPECS: DataCenterSpecs = {
-  name: "Hyperscale Data Center Domiechowice",
-  location: "Domiechowice, Gmina Bełchatów, Powiat Bełchatowski",
-  district: "Łódzkie, Polska",
-  areaHa: 52.6016,
-  plotsCount: 71,
-  itPowerMW: 500,
-  generatorPowerMW: 720,
-  generatorsCount: 100,
-  thermalPowerMWt: 300,
-  fuelStorageM3: "7 500 m³ - 13 000 m³ (Diesel / HVO)",
-  status: "Zawieszona decyzja środowiskowa (Postanowienie z 27 maja 2026 r.)",
-  statusDate: "27.05.2026",
-  investor: "Data Center Bełchatów Sp. z o.o. (Next DC Sp. z o.o.)",
-  buildingCoverage: "ok. 80% powierzchni zabudowanej lub utwardzonej",
-  biologicallyActiveArea: "min. 20% powierzchni biologicznie czynnej"
+// ---------------------------------------------------------------------------
+// Szablony warstw – każda deklaruje, dla których centrów danych jest dostępna.
+// ---------------------------------------------------------------------------
+interface LayerTemplate {
+  id: string;
+  name?: string;
+  nameFor?: (dc: DataCenterProfile) => string;
+  category: GISLayer['category'];
+  description?: string;
+  describe?: (dc: DataCenterProfile) => string;
+  visible: boolean;
+  opacity: number;
+  color: string;
+  fillColor: string;
+  dashArray?: string;
+  weight?: number;
+  type: GISLayer['type'];
+  buffers?: GISLayer['buffers'];
+  geoJsonData?: any;
+  dataFor?: (dc: DataCenterProfile) => any;
+  sources?: string[];
+  sourcesFor?: (dc: DataCenterProfile) => string[];
+  availableFor: DataCenterKey[];
+}
+
+const waterLayerDescription = (dc: DataCenterProfile): string => {
+  const w = dc.water;
+  const dcPart =
+    `~${formatMlnM3(w.total.annualM3)} mln m³/rok, zużycie bezpośrednie ${w.direct.factorLabel} ` +
+    `+ produkcja energii ~${formatFixed(w.indirect.factorLKwh, 1)} l/kWh`;
+
+  if (w.comparison) {
+    const c = w.comparison.city;
+    return (
+      'Dwa koła o powierzchni proporcjonalnej do rocznego zużycia wody: ' +
+      `Data Center ${w.powerMW} MW (${dcPart}) oraz ${c.name} (~${formatMlnM3(c.annualM3)} mln m³/rok, ` +
+      `${formatInt(c.population)} mieszk. × ${c.perCapitaLabel}). ` +
+      'Szczegółowe porównanie znajduje się w panelu legendy.'
+    );
+  }
+
+  return (
+    `Koło o powierzchni proporcjonalnym do rocznego zużycia wody: Data Center ${w.powerMW} MW (${dcPart}). ` +
+    'Porównanie z miastem – dane w przygotowaniu.'
+  );
 };
 
-export const INITIAL_LAYERS: GISLayer[] = [
+const energyLayerDescription = (dc: DataCenterProfile): string => {
+  const e = dc.energy;
+  const dcPart = `~${formatGWh(e.dc.annualGWh)}/rok, praca 24/7`;
+
+  if (e.comparison) {
+    const c = e.comparison.city;
+    return (
+      'Dwa koła o powierzchni proporcjonalnej do rocznego zużycia energii elektrycznej: ' +
+      `Data Center ${e.powerMW} MW (${dcPart}) oraz ${c.name} (~${formatGWh(c.annualGWh)}/rok, ` +
+      `${formatInt(c.population)} mieszk. × ${c.perCapitaLabel} – GUS 2024). ` +
+      'Szczegółowe porównanie w panelu legendy.'
+    );
+  }
+
+  return (
+    `Koło o powierzchni proporcjonalnym do rocznego zużycia energii elektrycznej: ` +
+    `Data Center ${e.powerMW} MW (${dcPart}). Porównanie z miastem – dane w przygotowaniu.`
+  );
+};
+
+const generatorNoiseDescription = (dc: DataCenterProfile): string =>
+  `Model 1/r^1.5. Źródło: 95 dBA w odległości 7 m od wydechu silnika diesla. ` +
+  `Zasięg słyszalności miesięcznych testów obciążeniowych ${dc.specs.generatorsCountLabel} ` +
+  `agregatów (${dc.specs.generatorPowerMW} MW).`;
+
+const LAYER_TEMPLATES: LayerTemplate[] = [
   {
     id: 'data_center_polygon',
     name: 'Obszar Inwestycji Data Center',
     category: 'inwestycja',
-    description: 'Poligon obejmujący 71 działek ewidencyjnych o łącznej powierzchni 52,6 ha w Domiechowicach.',
+    describe: (dc) => dc.texts.polygon.description,
     visible: true,
     opacity: 0.8,
     color: '#0284c7', // sky-600
     fillColor: '#38bdf8',
     weight: 3,
     type: 'geojson',
-    geoJsonData: dataCenterGeoJSON,
-    sources: ['Karta Informacyjna Przedsięwzięcia (KIP)', 'Gmina Bełchatów']
+    dataFor: (dc) => dc.geoJson,
+    sourcesFor: (dc) => dc.texts.polygon.sources,
+    availableFor: ['domiechowice', 'piaseczno']
   },
   {
     id: 'residential_buildings_layer',
     name: 'Najbliższe Zabudowania Mieszkaniowe & Odległości',
     category: 'zabudowa',
-    description: 'Punktowe lokalizacje najbliższych domów jednorodzinnych z wyliczoną odległością od krawędzi działek Data Center.',
+    description:
+      'Punktowe lokalizacje najbliższych domów jednorodzinnych z wyliczoną odległością od krawędzi działek Data Center.',
     visible: true,
     opacity: 1,
     color: '#6366f1', // indigo-500
     fillColor: '#818cf8',
     weight: 2,
     type: 'residential_markers',
-    sources: ['Pomiary odległościowe GIS', 'Wydział Geodezji']
+    sources: ['Pomiary odległościowe GIS', 'Wydział Geodezji'],
+    availableFor: ['domiechowice']
   },
   {
     id: 'noise_continuous_buffers',
     name: 'Hałas Ciągły Wentylatorów (Chillers)',
     category: 'akustyka',
-    description: 'Model 1/r^1.5 z odbiciami gruntowymi i atmosferycznymi. Źródło: 65 dBA w odległości 152,4 m (500 stóp). Spadek ~4,5 dB przy każdym podwojeniu odległości.',
+    description:
+      'Model 1/r^1.5 z odbiciami gruntowymi i atmosferycznymi. Źródło: 65 dBA w odległości 152,4 m (500 stóp). Spadek ~4,5 dB przy każdym podwojeniu odległości.',
     visible: true,
     opacity: 0.4,
     color: '#ea580c', // orange-600
@@ -106,20 +180,22 @@ export const INITIAL_LAYERS: GISLayer[] = [
         valueText: '~45 dBA',
         color: '#7e22ce',
         fillColor: '#a855f7',
-        description: 'Niskie częstotliwości (<200 Hz) z HVAC nie są pochłaniane przez powietrze, drzewa ani ekrany akustyczne – pozostają słyszalne nawet do 4 km.'
+        description:
+          'Niskie częstotliwości (<200 Hz) z HVAC nie są pochłaniane przez powietrze, drzewa ani ekrany akustyczne – pozostają słyszalne nawet do 4 km.'
       }
     ],
     sources: [
       'Lyver Data Center Noise Study (2022) – protectpwc.org',
       'https://protectpwc.org/wp-content/uploads/2023/02/Lyver-Data-Center-Noise-Study-123122.pdf',
       'Model 1/r^1.5 z odbiciami gruntowymi i inwersjami atmosferycznymi'
-    ]
+    ],
+    availableFor: ['domiechowice']
   },
   {
     id: 'noise_generators_buffers',
     name: 'Hałas Testów Generatorów Diesla',
     category: 'akustyka',
-    description: 'Model 1/r^1.5. Źródło: 95 dBA w odległości 7 m od wydechu silnika diesla. Zasięg słyszalności miesięcznych testów obciążeniowych ponad 100 agregatów (720 MW).',
+    describe: generatorNoiseDescription,
     visible: false,
     opacity: 0.45,
     color: '#dc2626', // red-600
@@ -156,19 +232,21 @@ export const INITIAL_LAYERS: GISLayer[] = [
         valueText: '48,2 dBA',
         color: '#991b1b',
         fillColor: '#b91c1c',
-        description: 'Poniżej normy dziennej, wciąż powyżej normy nocnej. Niskie częstotliwości słyszalne z dużej odległości.'
+        description: 'Poniżej normy dziennej, wciąż powyżej nocnej. Niskie częstotliwości słyszalne z dużej odległości.'
       }
     ],
     sources: [
       'Decibel International – Kompleksowy przewodnik po dźwiękoszczelności centrów danych',
       'https://www.decibelinternational.pl/blog/kompleksowy-przewodnik-po-d-wi-koszczelno-ci-i-optymalizacji-akustycznej-dla-centr-w-danych-6/'
-    ]
+    ],
+    availableFor: ['domiechowice']
   },
   {
     id: 'thermal_impact_buffers',
     name: 'Wpływ na Temperaturę Otoczenia (Mikroklimat)',
     category: 'termika',
-    description: 'Model wielomianowy drugiego stopnia (quadratic fit) – efekt wyspy ciepła centrów danych. ΔT(d) = 0,0158·d² – 0,3585·d + 2,0482 (d w km).',
+    description:
+      'Model wielomianowy drugiego stopnia (quadratic fit) – efekt wyspy ciepła centrów danych. ΔT(d) = 0,0158·d² – 0,3585·d + 2,0482 (d w km).',
     visible: false,
     opacity: 0.4,
     color: '#d97706', // amber-600
@@ -219,52 +297,51 @@ export const INITIAL_LAYERS: GISLayer[] = [
     sources: [
       'ResearchGate – The data heat island effect: quantifying the impact of AI data centers in a warming world',
       'https://www.researchgate.net/publication/403073048_The_data_heat_island_effect_quantifying_the_impact_of_AI_data_centers_in_a_warming_world'
-    ]
+    ],
+    availableFor: ['domiechowice']
   },
   {
     id: 'water_consumption_layer',
-    name: 'Zużycie Wody – Data Center vs Bełchatów',
+    name: 'Zużycie Wody – Data Center',
+    nameFor: (dc) =>
+      dc.water.comparison
+        ? `Zużycie Wody – Data Center vs ${dc.water.comparison.city.name}`
+        : `Zużycie Wody – Data Center ${dc.specs.shortName}`,
     category: 'woda',
-    description: 'Dwa koła o powierzchni proporcjonalnej do rocznego zużycia wody: Data Center 500 MW (~10,97 mln m³/rok, zużycie bezpośrednie 50 m³/dobę + produkcja energii ~2,5 l/kWh) oraz Bełchatów (~2,87 mln m³/rok, 52 331 mieszk. × 150 l/dobę). Szczegółowe porównanie znajduje się w panelu legendy.',
+    describe: waterLayerDescription,
     visible: false,
     opacity: 1,
     color: '#0891b2', // cyan-600
     fillColor: '#22d3ee',
     weight: 2,
     type: 'water_consumption',
-    sources: [
-      'Deklaracja wójta podczas konsultacji – bezpośrednie zużycie wody centrum danych: 50 m³/dobę',
-      'https://www.youtube.com/watch?v=yKuA8bCMzoA',
-      'GlobEnergia – Ile wody potrzebuje elektrownia węglowa (1,5–4 l/kWh)',
-      'https://globenergia.pl/ile-wody-potrzebuje-elektrownia-weglowa-to-nawet-190-l-kwh/',
-      'Mojawoda.com – średnie zużycie wody na osobę w Polsce (~150 l/dobę)',
-      'https://mojawoda.com/pl/blog/poradniki/srednie-zuzycie-wody-na-osobe-w-m3-i-litrach-kalkulator-zuzycia-wody-2026',
-      'Wikipedia – Bełchatów (liczba mieszkańców: 52 331)',
-      'https://pl.wikipedia.org/wiki/Be%C5%82chat%C3%B3w'
-    ]
+    sourcesFor: (dc) => dc.texts.water.sources,
+    availableFor: ['domiechowice', 'piaseczno']
   },
   {
     id: 'energy_consumption_layer',
-    name: 'Zużycie Prądu – Data Center vs Bełchatów',
+    name: 'Zużycie Prądu – Data Center',
+    nameFor: (dc) =>
+      dc.energy.comparison
+        ? `Zużycie Prądu – Data Center vs ${dc.energy.comparison.city.name}`
+        : `Zużycie Prądu – Data Center ${dc.specs.shortName}`,
     category: 'energia',
-    description: 'Dwa koła o powierzchni proporcjonalnej do rocznego zużycia energii elektrycznej: Data Center 500 MW (~4,38 TWh/rok, praca 24/7) oraz Bełchatów (~34,7 GWh/rok, 52 331 mieszk. × 662,7 kWh – GUS 2024). Szczegółowe porównanie w panelu legendy.',
+    describe: energyLayerDescription,
     visible: false,
     opacity: 1,
     color: '#ca8a04', // yellow-600
     fillColor: '#facc15',
     weight: 2,
     type: 'energy_consumption',
-    sources: [
-      'GUS – Bank Danych Lokalnych (BDL), zużycie energii elektrycznej (2024 r.): 662,7 kWh na mieszkańca',
-      'https://bdl.stat.gov.pl/',
-      'Karta Informacyjna Przedsięwzięcia (KIP) – moc centrum danych: 500 MW'
-    ]
+    sourcesFor: (dc) => dc.texts.energy.sources,
+    availableFor: ['domiechowice', 'piaseczno']
   },
   {
     id: 'dolina_widawki_polygon',
     name: 'Obszar Chronionego Krajobrazu Doliny Widawki',
     category: 'srodowisko',
-    description: 'Prawnie chroniony obszar krajobrazowy na podstawie oficjalnych danych przestrzennych (PL.ZIPOP.1393.OCHK.272).',
+    description:
+      'Prawnie chroniony obszar krajobrazowy na podstawie oficjalnych danych przestrzennych (PL.ZIPOP.1393.OCHK.272).',
     visible: true,
     opacity: 0.35,
     color: '#059669', // emerald-600
@@ -272,7 +349,8 @@ export const INITIAL_LAYERS: GISLayer[] = [
     weight: 2,
     type: 'geojson',
     geoJsonData: dolinaWidawkiFullGeoJSON,
-    sources: ['GDOŚ / Generalna Dyrekcja Ochrony Środowiska', 'data/dolina-winiawki.json']
+    sources: ['GDOŚ / Generalna Dyrekcja Ochrony Środowiska', 'data/dolina-winiawki.json'],
+    availableFor: ['domiechowice']
   },
   {
     id: 'archeo_site_marker',
@@ -286,10 +364,131 @@ export const INITIAL_LAYERS: GISLayer[] = [
     weight: 2,
     type: 'marker',
     geoJsonData: archeoSiteGeoJSON,
-    sources: ['zabytek.pl', 'AZP 75-50/26']
+    sources: ['zabytek.pl', 'AZP 75-50/26'],
+    availableFor: ['domiechowice']
   }
 ];
 
+/** Buduje listę warstw dostępnych dla wybranego centrum danych. */
+export function buildInitialLayers(dc: DataCenterProfile): GISLayer[] {
+  return LAYER_TEMPLATES.filter((t) => t.availableFor.includes(dc.id)).map((t) => ({
+    id: t.id,
+    name: t.nameFor ? t.nameFor(dc) : (t.name ?? ''),
+    category: t.category,
+    description: t.describe ? t.describe(dc) : (t.description ?? ''),
+    visible: t.visible,
+    opacity: t.opacity,
+    color: t.color,
+    fillColor: t.fillColor,
+    dashArray: t.dashArray,
+    weight: t.weight,
+    type: t.type,
+    buffers: t.buffers,
+    detailsHtml: undefined,
+    sources: t.sourcesFor ? t.sourcesFor(dc) : t.sources,
+    geoJsonData: t.dataFor ? t.dataFor(dc) : t.geoJsonData
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Presety widoczności warstw
+// ---------------------------------------------------------------------------
+export interface PresetDefinition {
+  id: PresetKey;
+  label: (dc: DataCenterProfile) => string;
+  color: string;
+  icon: LucideIcon;
+  iconClassName: string;
+  targetLayerIds: string[];
+}
+
+export const PRESETS: PresetDefinition[] = [
+  {
+    id: 'continuous_noise',
+    label: () => 'Hałas wentylatorów',
+    color: 'bg-orange-50 border-orange-200 text-orange-900 hover:bg-orange-100',
+    icon: Volume2,
+    iconClassName: 'w-3.5 h-3.5 text-orange-600',
+    targetLayerIds: ['noise_continuous_buffers', 'residential_buildings_layer']
+  },
+  {
+    id: 'generator_noise',
+    label: () => 'Testy generatorów',
+    color: 'bg-red-50 border-red-200 text-red-900 hover:bg-red-100',
+    icon: ShieldAlert,
+    iconClassName: 'w-3.5 h-3.5 text-red-600',
+    targetLayerIds: ['noise_generators_buffers', 'residential_buildings_layer']
+  },
+  {
+    id: 'thermal',
+    label: () => 'Wpływ na temperaturę',
+    color: 'bg-amber-50 border-amber-200 text-amber-900 hover:bg-amber-100',
+    icon: Thermometer,
+    iconClassName: 'w-3.5 h-3.5 text-amber-600',
+    targetLayerIds: ['thermal_impact_buffers', 'residential_buildings_layer']
+  },
+  {
+    id: 'protected_areas',
+    label: () => 'Obszary chronione',
+    color: 'bg-emerald-50 border-emerald-200 text-emerald-900 hover:bg-emerald-100',
+    icon: ShieldCheckIcon,
+    iconClassName: 'w-3.5 h-3.5 text-emerald-600',
+    targetLayerIds: ['dolina_widawki_polygon', 'archeo_site_marker']
+  },
+  {
+    id: 'residential_distances',
+    label: () => 'Odległości do zabudowań',
+    color: 'bg-indigo-50 border-indigo-200 text-indigo-900 hover:bg-indigo-100',
+    icon: MapPin,
+    iconClassName: 'w-3.5 h-3.5 text-indigo-600',
+    targetLayerIds: ['residential_buildings_layer']
+  },
+  {
+    id: 'water',
+    label: (dc) =>
+      dc.water.comparison
+        ? `Zużycie wody (DC vs ${dc.water.comparison.city.name})`
+        : 'Zużycie wody (DC)',
+    color: 'bg-cyan-50 border-cyan-200 text-cyan-900 hover:bg-cyan-100',
+    icon: Droplets,
+    iconClassName: 'w-3.5 h-3.5 text-cyan-600',
+    targetLayerIds: ['water_consumption_layer']
+  },
+  {
+    id: 'energy',
+    label: (dc) =>
+      dc.energy.comparison
+        ? `Zużycie prądu (DC vs ${dc.energy.comparison.city.name})`
+        : 'Zużycie prądu (DC)',
+    color: 'bg-yellow-50 border-yellow-300 text-yellow-900 hover:bg-yellow-100',
+    icon: Zap,
+    iconClassName: 'w-3.5 h-3.5 text-yellow-600',
+    targetLayerIds: ['energy_consumption_layer']
+  }
+];
+
+/** Presety, dla których jakakolwiek warstwa jest dostępna w danym DC. */
+export function getAvailablePresets(layers: GISLayer[]): PresetDefinition[] {
+  const ids = new Set(layers.map((l) => l.id));
+  return PRESETS.filter((p) => p.targetLayerIds.some((id) => ids.has(id)));
+}
+
+/** Ustawia widoczność warstw zgodnie z wybranym presetem (warstwa DC zawsze widoczna). */
+export function applyPresetToLayers(layers: GISLayer[], preset: PresetKey | null): GISLayer[] {
+  const targetIds = new Set(
+    preset ? PRESETS.find((p) => p.id === preset)?.targetLayerIds ?? [] : []
+  );
+
+  return layers.map((layer) =>
+    layer.id === 'data_center_polygon'
+      ? { ...layer, visible: true }
+      : { ...layer, visible: targetIds.has(layer.id) }
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Dane chartów (hałas, termika)
+// ---------------------------------------------------------------------------
 export const NOISE_DECAY_CHART_DATA = [
   { distance: 150, noiseContinuous: 65, noiseGenerator: 95, label: '150 m', normNight: 40, normDay: 50, note: 'Źródło wentylatorów (500 stóp / 152,4 m)' },
   { distance: 250, noiseContinuous: 61.8, noiseGenerator: 61.7, label: '250 m', normNight: 40, normDay: 50, note: 'Typowa praca centrum danych' },
@@ -309,121 +508,9 @@ export const THERMAL_ELEVATION_CHART_DATA = [
   { distance: 10000, tempRise: 0.04, label: '10 km', threshold: 0.5, note: 'Granica oddziaływania' },
 ];
 
-// --- Bilans wodny: Data Center 500 MW vs mieszkańcy Bełchatowa ---
-export const WATER_ANALYSIS = {
-  powerMW: 500,
-  annualEnergyKWh: 4_380_000_000, // 500 MW × 24 h × 365 dni = 4,38 TWh
-  annualEnergyLabel: '4 380 000 000 kWh (4,38 TWh)',
-  direct: {
-    label: 'Bezpośrednie (chłodzenie – deklaracja wójta)',
-    factorLabel: '50 m³/dobę',
-    annualM3: 18_250,
-    annualLabel: '~18 250 m³'
-  },
-  indirect: {
-    label: 'Pośrednie (produkcja energii elektrycznej – średnia dla miksu PL)',
-    factorLKwh: 2.5,
-    factorLabel: '~2,50 l/kWh',
-    annualM3: 10_950_000,
-    annualLabel: '~10 950 000 m³'
-  },
-  total: {
-    factorLKwh: 2.5,
-    factorLabel: '~2,50 l/kWh',
-    annualM3: 10_968_250,
-    annualLabel: '~10 968 250 m³',
-    annualLitersLabel: '~11,0 mld litrów'
-  },
-  belchatow: {
-    population: 52_331,
-    litersPerPersonDay: 150,
-    annualM3: 2_865_122,
-    annualLabel: '~2 865 000 m³',
-    centerCoords: [51.36239, 19.36522] as [number, number] // 51°21'44.6"N 19°21'54.8"E
-  },
-  groundwater: {
-    aquiferDepthNote: 'Miąższość wodonośnych osadów czwartorzędu rzadko przekracza 30 m, najczęściej mieści się w przedziale 10–20 m.',
-    waterTableNote: 'Lustro wody stabilizuje się na głębokości od 1 do 20 m, przeważnie w przedziale 2–10 m.',
-    yieldNote: 'Wydajności pojedynczych ujęć do 80 m³/h, przeważnie jednak wynoszą około 10–40 m³/h.',
-    source: 'Prognoza Oddziaływania na Środowisko',
-    maxFlowM3h: 80,
-    typicalFlowM3h: 40,
-    annualMaxM3: 700_800, // 80 m³/h × 24 h × 365 dni
-    annualMaxLabel: '~700 800 m³',
-    annualTypicalM3: 350_400, // 40 m³/h × 24 h × 365 dni
-    annualTypicalLabel: '~350 400 m³'
-  },
-  mapCircles: {
-    dcRadiusMeters: 2328.6,
-    dcDirectRadiusMeters: 91.3, // sqrt(18 250 / 10 968 250) × 2328.6 – powierzchnia proporcjonalna do zużycia bezpośredniego
-    dcGroundwaterRadiusMeters: 608.6, // sqrt(350 400 / 10 968 250) × 2328.6 – roczna wydajność typowego ujęcia (40 m³/h)
-    cityRadiusMeters: 1150,
-    scaleNote: 'Pola powierzchni kół proporcjonalne do rocznego zużycia wody'
-  },
-  ratioVsCity: 3.8,
-  cityWaterForDcMonths: 3.1
-};
-
-export const WATER_COMPARISON_CHART_DATA = [
-  {
-    podmiot: 'Data Center 500 MW',
-    bezposrednie: WATER_ANALYSIS.direct.annualM3,
-    posrednie: WATER_ANALYSIS.indirect.annualM3,
-    note: 'Zużycie bezpośrednie (50 m³/dobę) + produkcja energii (~2,5 l/kWh)'
-  },
-  {
-    podmiot: 'Bełchatów (52 331 mieszk.)',
-    bezposrednie: WATER_ANALYSIS.belchatow.annualM3,
-    posrednie: 0,
-    note: '52 331 mieszkańców × 150 l/dobę × 365 dni'
-  }
-];
-
-// --- Bilans energetyczny: Data Center 500 MW vs mieszkańcy Bełchatowa ---
-export const ENERGY_ANALYSIS = {
-  powerMW: 500,
-  annualEnergyKWh: 4_380_000_000, // 500 MW × 24 h × 365 dni = 4,38 TWh
-  annualEnergyLabel: '4 380 000 000 kWh (4,38 TWh)',
-  dc: {
-    label: 'Pobór Data Center (praca 24/7)',
-    annualKWh: 4_380_000_000,
-    annualLabel: '~4 380 000 000 kWh (4,38 TWh)',
-    annualGWh: 4_380
-  },
-  belchatow: {
-    population: 52_331,
-    perCapitaKWh: 662.7,
-    perCapitaLabel: '662,7 kWh',
-    annualKWh: 34_679_753.7,
-    annualLabel: '~34 680 000 kWh (~34,7 GWh)',
-    annualGWh: 34.68,
-    centerCoords: [51.36239, 19.36522] as [number, number] // 51°21'44.6"N 19°21'54.8"E
-  },
-  mapCircles: {
-    dcRadiusMeters: 2328.6,
-    cityRadiusMeters: 207,
-    scaleNote: 'Pola powierzchni kół proporcjonalne do rocznego zużycia energii'
-  },
-  ratioVsCity: 126.3,
-  cityEnergyForDcDays: 2.9
-};
-
-export const ENERGY_COMPARISON_CHART_DATA = [
-  {
-    podmiot: 'Data Center 500 MW',
-    gwh: ENERGY_ANALYSIS.dc.annualGWh,
-    note: '500 MW × 24 h × 365 dni'
-  },
-  {
-    podmiot: 'Bełchatów (52 331 mieszk.)',
-    gwh: ENERGY_ANALYSIS.belchatow.annualGWh,
-    note: '662,7 kWh/mieszkańca (GUS 2024) × 52 331'
-  }
-];
-
-// --- Elektrownia Bełchatów: moc Data Center vs bloki energetyczne ---
-// Bloki nr 2–12 o mocy nominalnej 370–390 MW (przyjęto wartość średnią 380 MW),
-// blok nr 14 o mocy 858 MW. Łączna moc maksymalna stacji wg Wikipedii: 5298 MW.
+// ---------------------------------------------------------------------------
+// Skala mocy: Elektrownia Bełchatów (porównanie dostępne tylko dla Domiechowic)
+// ---------------------------------------------------------------------------
 export const BELCHATOW_PLANT_INFO = {
   name: 'Elektrownia Bełchatów',
   totalMaxMW: 5298,

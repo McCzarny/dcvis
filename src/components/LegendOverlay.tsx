@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { GISLayer } from '../types/gis';
-import { WATER_ANALYSIS, ENERGY_ANALYSIS } from '../data/layersRegistry';
+import type { DataCenterProfile } from '../data/dataCenters';
+import { ratioClause } from '../data/dataCenters';
 import { HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface LegendOverlayProps {
   layers: GISLayer[];
+  dataCenter: DataCenterProfile;
 }
 
 const formatMln = (m3: number) =>
@@ -15,9 +17,18 @@ const formatGwh = (gwh: number) =>
     ? `${(gwh / 1000).toLocaleString('pl-PL', { maximumFractionDigits: 2 })} TWh`
     : `${gwh.toLocaleString('pl-PL', { maximumFractionDigits: 1 })} GWh`;
 
-export const LegendOverlay: React.FC<LegendOverlayProps> = ({ layers }) => {
+export const LegendOverlay: React.FC<LegendOverlayProps> = ({
+  layers,
+  dataCenter,
+}) => {
   const [collapsed, setCollapsed] = useState(false);
   const activeLayers = layers.filter((l) => l.visible);
+
+  const water = dataCenter.water;
+  const energy = dataCenter.energy;
+  const waterComparison = water.comparison;
+  const energyComparison = energy.comparison;
+  const cityName = waterComparison?.city.name;
 
   return (
     <div className="absolute bottom-6 right-4 z-[900] max-w-xs md:max-w-sm rounded-2xl p-3 shadow-2xl transition-all bg-white/90 border border-slate-300 backdrop-blur-sm">
@@ -32,7 +43,11 @@ export const LegendOverlay: React.FC<LegendOverlayProps> = ({ layers }) => {
           onClick={() => setCollapsed(!collapsed)}
           className="text-slate-600 hover:text-slate-800 p-0.5"
         >
-          {collapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {collapsed ? (
+            <ChevronUp className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
         </button>
       </div>
 
@@ -64,110 +79,208 @@ export const LegendOverlay: React.FC<LegendOverlayProps> = ({ layers }) => {
                           />
                           <span>{buf.label}</span>
                         </div>
-                        <span className="font-mono text-slate-800 font-semibold">{buf.valueText}</span>
+                        <span className="font-mono text-slate-800 font-semibold">
+                          {buf.valueText}
+                        </span>
                       </div>
                     ))}
                   </div>
                 )}
 
-                {/* Panel porównania zużycia wody (Data Center vs Bełchatów) */}
+                {/* Panel porównania zużycia wody */}
                 {layer.id === 'water_consumption_layer' && (
                   <div className="mt-1.5 space-y-2">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-[11px] text-slate-700">
                         <div className="flex items-center space-x-1.5">
                           <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-cyan-400 border border-cyan-600" />
-                          <span>Data Center 500 MW (łącznie)</span>
+                          <span>
+                            {dataCenter.specs.shortName} {water.powerMW} MW
+                            (łącznie)
+                          </span>
                         </div>
                         <span className="font-mono text-slate-800 font-semibold">
-                          ~{formatMln(WATER_ANALYSIS.total.annualM3)} mln m³/rok
+                          ~{formatMln(water.total.annualM3)} mln m³/rok
                         </span>
                       </div>
                       <div className="pl-4 space-y-0.5 text-[10px] text-slate-500">
                         <div className="flex items-center justify-between">
-                          <span>– zużycie bezpośrednie ({WATER_ANALYSIS.direct.factorLabel})</span>
-                          <span className="font-mono">~{formatMln(WATER_ANALYSIS.direct.annualM3)} mln m³</span>
+                          <span>
+                            – zużycie bezpośrednie ({water.direct.factorLabel})
+                          </span>
+                          <span className="font-mono">
+                            ~{formatMln(water.direct.annualM3)} mln m³
+                          </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span>– produkcja energii ({WATER_ANALYSIS.indirect.factorLabel})</span>
-                          <span className="font-mono">~{formatMln(WATER_ANALYSIS.indirect.annualM3)} mln m³</span>
+                          <span>
+                            – produkcja energii ({water.indirect.factorLabel})
+                          </span>
+                          <span className="font-mono">
+                            ~{formatMln(water.indirect.annualM3)} mln m³
+                          </span>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between text-[11px] text-slate-700">
-                        <div className="flex items-center space-x-1.5">
-                          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-indigo-400 border border-indigo-600" />
-                          <span>Bełchatów ({WATER_ANALYSIS.belchatow.population.toLocaleString('pl-PL')} mieszk.)</span>
-                        </div>
-                        <span className="font-mono text-slate-800 font-semibold">
-                          ~{formatMln(WATER_ANALYSIS.belchatow.annualM3)} mln m³/rok
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-[11px] text-slate-700">
-                        <div className="flex items-center space-x-1.5">
-                          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-purple-400 border-2 border-dashed border-purple-600" />
-                          <span>Wydajność wód podziemnych (typowe ujęcie)</span>
-                        </div>
-                        <span className="font-mono text-slate-800 font-semibold">
-                          ~{formatMln(WATER_ANALYSIS.groundwater.annualTypicalM3)} mln m³/rok
-                        </span>
-                      </div>
+                      {waterComparison && (
+                          <div className="flex items-center justify-between text-[11px] text-slate-700">
+                            <div className="flex items-center space-x-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-indigo-400 border border-indigo-600" />
+                              <span>
+                                {waterComparison.city.name} (
+                                {waterComparison.city.population.toLocaleString(
+                                  'pl-PL',
+                                )}{' '}
+                                mieszk.)
+                              </span>
+                            </div>
+                            <span className="font-mono text-slate-800 font-semibold">
+                              ~{formatMln(waterComparison.city.annualM3)} mln
+                              m³/rok
+                            </span>
+                          </div>
+                        )}
+                      {waterComparison?.groundwater && (
+                          <div className="flex items-center justify-between text-[11px] text-slate-700">
+                            <div className="flex items-center space-x-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-purple-400 border-2 border-dashed border-purple-600" />
+                              <span>
+                                Wydajność wód podziemnych (typowe ujęcie)
+                              </span>
+                            </div>
+                            <span className="font-mono text-slate-800 font-semibold">
+                              ~
+                              {formatMln(
+                                waterComparison.groundwater.annualTypicalM3,
+                              )}{' '}
+                              mln m³/rok
+                            </span>
+                          </div>
+                        )}
                     </div>
 
-                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 text-[11px] leading-relaxed text-purple-900">
-                      Wydajność pojedynczych ujęć wód podziemnych (czwartorzęd) zwykle <strong>10–40 m³/h</strong>, do 80 m³/h.
-                      Typowe ujęcie (40 m³/h) daje rocznie ok. <strong>~{formatMln(WATER_ANALYSIS.groundwater.annualTypicalM3)} mln m³</strong> –
-                      znacznie więcej niż zużycie bezpośrednie na chłodzenie (~{formatMln(WATER_ANALYSIS.direct.annualM3)} mln m³).
-                    </div>
+                    {waterComparison?.groundwater && (
+                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 text-[11px] leading-relaxed text-purple-900">
+                          Wydajność pojedynczych ujęć wód podziemnych
+                          (czwartorzęd) zwykle{' '}
+                          <strong>
+                            10–40 m³/h, do{' '}
+                            {waterComparison.groundwater.maxFlowM3h} m³/h
+                          </strong>
+                          . Typowe ujęcie daje rocznie ok.{' '}
+                          <strong>
+                            ~
+                            {formatMln(
+                              waterComparison.groundwater.annualTypicalM3,
+                            )}{' '}
+                            mln m³
+                          </strong>{' '}
+                          – znacznie więcej niż zużycie bezpośrednie na
+                          chłodzenie (~
+                          {formatMln(water.direct.annualM3)} mln m³).
+                        </div>
+                    )}
 
-                    <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-2 text-[11px] leading-relaxed text-cyan-900">
-                      Centrum danych zużywa ok. <strong>{WATER_ANALYSIS.ratioVsCity.toLocaleString('pl-PL')} raza więcej wody</strong> niż
-                      wszyscy mieszkańcy Bełchatowa. Roczne zużycie miasta wystarczyłoby obiektowi na ok.{' '}
-                      <strong>{WATER_ANALYSIS.cityWaterForDcMonths.toLocaleString('pl-PL')} miesiąca</strong> pracy.
-                    </div>
+                    {waterComparison && (
+                      <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-2 text-[11px] leading-relaxed text-cyan-900">
+                          Centrum danych zużywa ok.{' '}
+                          <strong>
+                            {ratioClause(waterComparison.ratioVsCity, 'wody')}
+                          </strong>{' '}
+                          wszyscy mieszkańcy {cityName}. Roczne zużycie
+                          miasta wystarczyłoby obiektowi na ok.{' '}
+                          <strong>
+                            {waterComparison.cityWaterForDcMonths.toLocaleString(
+                              'pl-PL',
+                            )}{' '}
+                            miesiąca
+                          </strong>{' '}
+                          pracy.
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* Panel porównania zużycia energii (Data Center vs Bełchatów) */}
+                {/* Panel porównania zużycia energii */}
                 {layer.id === 'energy_consumption_layer' && (
                   <div className="mt-1.5 space-y-2">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-[11px] text-slate-700">
                         <div className="flex items-center space-x-1.5">
                           <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-yellow-400 border border-yellow-600" />
-                          <span>Data Center 500 MW (praca 24/7)</span>
+                          <span>
+                            {dataCenter.specs.shortName} {energy.powerMW} MW
+                            (praca 24/7)
+                          </span>
                         </div>
                         <span className="font-mono text-slate-800 font-semibold">
-                          {formatGwh(ENERGY_ANALYSIS.dc.annualGWh)}/rok
+                          {formatGwh(energy.dc.annualGWh)}/rok
                         </span>
                       </div>
                       <div className="pl-4 space-y-0.5 text-[10px] text-slate-500">
                         <div className="flex items-center justify-between">
-                          <span>– 500 MW × 24 h × 365 dni</span>
-                          <span className="font-mono">~4 380 000 000 kWh</span>
+                          <span>
+                            – {energy.powerMW} MW × 24 h × 365 dni
+                          </span>
+                          <span className="font-mono">
+                            ~
+                            {energy.dc.annualKWh.toLocaleString('pl-PL')} kWh
+                          </span>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between text-[11px] text-slate-700">
-                        <div className="flex items-center space-x-1.5">
-                          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-indigo-400 border border-indigo-600" />
-                          <span>Bełchatów ({ENERGY_ANALYSIS.belchatow.population.toLocaleString('pl-PL')} mieszk.)</span>
-                        </div>
-                        <span className="font-mono text-slate-800 font-semibold">
-                          {formatGwh(ENERGY_ANALYSIS.belchatow.annualGWh)}/rok
-                        </span>
-                      </div>
-                      <div className="pl-4 space-y-0.5 text-[10px] text-slate-500">
-                        <div className="flex items-center justify-between">
-                          <span>– {ENERGY_ANALYSIS.belchatow.perCapitaLabel}/mieszkańca (GUS 2024)</span>
-                          <span className="font-mono">~34 680 000 kWh</span>
-                        </div>
-                      </div>
+                      {energyComparison && (
+                        <>
+                          <div className="flex items-center justify-between text-[11px] text-slate-700">
+                            <div className="flex items-center space-x-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-indigo-400 border border-indigo-600" />
+                              <span>
+                                {energyComparison.city.name} (
+                                {energyComparison.city.population.toLocaleString(
+                                  'pl-PL',
+                                )}{' '}
+                                mieszk.)
+                              </span>
+                            </div>
+                            <span className="font-mono text-slate-800 font-semibold">
+                              {formatGwh(energyComparison.city.annualGWh)}/rok
+                            </span>
+                          </div>
+                          <div className="pl-4 space-y-0.5 text-[10px] text-slate-500">
+                            <div className="flex items-center justify-between">
+                              <span>
+                                – {energyComparison.city.perCapitaLabel}
+                                /mieszkańca (GUS 2024)
+                              </span>
+                              <span className="font-mono">
+                                ~
+                                {energyComparison.city.annualKWh.toLocaleString(
+                                  'pl-PL',
+                                )}{' '}
+                                kWh
+                              </span>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
 
-                    <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-2 text-[11px] leading-relaxed text-yellow-900">
-                      Centrum danych zużywa ok. <strong>{ENERGY_ANALYSIS.ratioVsCity.toLocaleString('pl-PL')} razy więcej prądu</strong> niż
-                      wszyscy mieszkańcy Bełchatowa. Roczne zużycie miasta wystarczyłoby obiektowi na ok.{' '}
-                      <strong>{ENERGY_ANALYSIS.cityEnergyForDcDays.toLocaleString('pl-PL')} dni</strong> pracy.
-                    </div>
+                    {energyComparison && (
+                      <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-2 text-[11px] leading-relaxed text-yellow-900">
+                        Centrum danych zużywa ok.{' '}
+                        <strong>
+                          {ratioClause(energyComparison.ratioVsCity, 'prądu')}
+                        </strong>{' '}
+                        wszyscy mieszkańcy{' '}
+                        {energyComparison.city.genitive}. Roczne zużycie miasta
+                        wystarczyłoby obiektowi na ok.{' '}
+                        <strong>
+                          {energyComparison.cityEnergyForDcDays.toLocaleString(
+                            'pl-PL',
+                          )}{' '}
+                          dni
+                        </strong>{' '}
+                        pracy.
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

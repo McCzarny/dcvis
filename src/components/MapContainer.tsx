@@ -1,13 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { MapContainer as ReactMapContainer, TileLayer, GeoJSON, Marker, Popup, Tooltip, Polyline, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { GISLayer, MapTileProvider } from '../types/gis';
 import { generateFeatureBuffers } from '../utils/geoUtils';
-import { dataCenterGeoJSON } from '../data/geojson/dataCenter';
 import { archeoSiteGeoJSON } from '../data/geojson/archeoSite';
 import dolinaWidawkiFullGeoJSON from '../data/geojson/dolinaWidawki.json';
 import { getResidentialBuildings } from '../data/residentialData';
-import { WATER_ANALYSIS, ENERGY_ANALYSIS } from '../data/layersRegistry';
+import { DataCenterProfile, formatNum } from '../data/dataCenters';
 import { Crosshair, Home } from 'lucide-react';
 
 // Stonowany, statyczny marker dla obiektu archeologicznego (bez migania)
@@ -43,19 +42,35 @@ const homeDivIcon = L.divIcon({
 });
 
 interface MapContainerProps {
+  dataCenter: DataCenterProfile;
   layers: GISLayer[];
   tileProvider: MapTileProvider;
   onSelectTileProvider: (provider: MapTileProvider) => void;
 }
 
-const MapControls: React.FC<{ tileProvider: MapTileProvider; onSelectTileProvider: (p: MapTileProvider) => void }> = ({
-  tileProvider,
-  onSelectTileProvider
-}) => {
+/** Przelot mapy do centrum danych po jego zmianie (bez animacji przy pierwszym renderze). */
+const DataViewSync: React.FC<{ dataCenter: DataCenterProfile }> = ({ dataCenter }) => {
+  const map = useMap();
+  const previousIdRef = useRef(dataCenter.id);
+
+  useEffect(() => {
+    if (previousIdRef.current === dataCenter.id) return;
+    previousIdRef.current = dataCenter.id;
+    map.flyTo(dataCenter.mapCenter, dataCenter.mapZoom, { duration: 1.0 });
+  }, [map, dataCenter]);
+
+  return null;
+};
+
+const MapControls: React.FC<{
+  dataCenter: DataCenterProfile;
+  tileProvider: MapTileProvider;
+  onSelectTileProvider: (p: MapTileProvider) => void;
+}> = ({ dataCenter, tileProvider, onSelectTileProvider }) => {
   const map = useMap();
 
   const handleResetView = () => {
-    map.flyTo([51.367, 19.314], 14, { duration: 1.0 });
+    map.flyTo(dataCenter.mapCenter, dataCenter.mapZoom, { duration: 1.0 });
   };
 
   return (
@@ -98,11 +113,14 @@ const MapControls: React.FC<{ tileProvider: MapTileProvider; onSelectTileProvide
 };
 
 export const MapContainerComponent: React.FC<MapContainerProps> = ({
+  dataCenter,
   layers,
   tileProvider,
   onSelectTileProvider
 }) => {
-  const center: [number, number] = [51.367, 19.314];
+  const center: [number, number] = dataCenter.mapCenter;
+  const specs = dataCenter.specs;
+  const dcGeoJson = dataCenter.geoJson;
 
   const tileUrls = {
     osm: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -114,44 +132,74 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
     satellite: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
   };
 
-  // Dane zabudowań mieszkalnych
-  const residentialBuildings = useMemo(() => getResidentialBuildings(), []);
-  const dcCenterCoord: [number, number] = [51.367, 19.314];
-
-  // Bufory hałasu ciągłego
-  const noiseContLayer = layers.find((l) => l.id === 'noise_continuous_buffers');
-  const noiseContBuffers = useMemo(() => {
-    if (!noiseContLayer || !noiseContLayer.visible || !noiseContLayer.buffers) return [];
-    return generateFeatureBuffers(dataCenterGeoJSON, noiseContLayer.buffers);
-  }, [noiseContLayer?.visible, noiseContLayer?.opacity]);
-
-  // Bufory hałasu generatorów diesla
-  const noiseGenLayer = layers.find((l) => l.id === 'noise_generators_buffers');
-  const noiseGenBuffers = useMemo(() => {
-    if (!noiseGenLayer || !noiseGenLayer.visible || !noiseGenLayer.buffers) return [];
-    return generateFeatureBuffers(dataCenterGeoJSON, noiseGenLayer.buffers);
-  }, [noiseGenLayer?.visible, noiseGenLayer?.opacity]);
-
-  // Bufory termiczne
-  const thermalLayer = layers.find((l) => l.id === 'thermal_impact_buffers');
-  const thermalBuffers = useMemo(() => {
-    if (!thermalLayer || !thermalLayer.visible || !thermalLayer.buffers) return [];
-    return generateFeatureBuffers(dataCenterGeoJSON, thermalLayer.buffers);
-  }, [thermalLayer?.visible, thermalLayer?.opacity]);
-
-  // Pobranie pozostałych warstw
+  // Pobranie warstw (dostępnych tylko tych, które obsługuje dane DC)
   const dcLayer = layers.find((l) => l.id === 'data_center_polygon');
   const archeoLayer = layers.find((l) => l.id === 'archeo_site_marker');
   const widawkaLayer = layers.find((l) => l.id === 'dolina_widawki_polygon');
   const residentialLayer = layers.find((l) => l.id === 'residential_buildings_layer');
   const waterLayer = layers.find((l) => l.id === 'water_consumption_layer');
   const energyLayer = layers.find((l) => l.id === 'energy_consumption_layer');
+  const noiseContLayer = layers.find((l) => l.id === 'noise_continuous_buffers');
+  const noiseGenLayer = layers.find((l) => l.id === 'noise_generators_buffers');
+  const thermalLayer = layers.find((l) => l.id === 'thermal_impact_buffers');
+
+  // Dane zabudowań mieszkalnych (jeśli warstwa jest dostępna w tym DC)
+  const residentialBuildings = useMemo(
+    () => (residentialLayer ? getResidentialBuildings(dcGeoJson) : []),
+    [residentialLayer, dcGeoJson]
+  );
+
+  const dcCenterCoord: [number, number] = [center[0], center[1]];
+
+  // Bufory hałasu ciągłego
+  const noiseContBuffers = useMemo(() => {
+    if (!noiseContLayer || !noiseContLayer.visible || !noiseContLayer.buffers) return [];
+    return generateFeatureBuffers(dcGeoJson, noiseContLayer.buffers);
+  }, [noiseContLayer, dcGeoJson]);
+
+  // Bufory hałasu generatorów diesla
+  const noiseGenBuffers = useMemo(() => {
+    if (!noiseGenLayer || !noiseGenLayer.visible || !noiseGenLayer.buffers) return [];
+    return generateFeatureBuffers(dcGeoJson, noiseGenLayer.buffers);
+  }, [noiseGenLayer, dcGeoJson]);
+
+  // Bufory termiczne
+  const thermalBuffers = useMemo(() => {
+    if (!thermalLayer || !thermalLayer.visible || !thermalLayer.buffers) return [];
+    return generateFeatureBuffers(dcGeoJson, thermalLayer.buffers);
+  }, [thermalLayer, dcGeoJson]);
+
+  const water = dataCenter.water;
+  const waterComparison = water.comparison;
+  const energy = dataCenter.energy;
+  const energyComparison = energy.comparison;
+
+  const popupSpecs: { label: string; value: string; className: string }[] = [
+    { label: 'Moc:', value: `~${specs.itPowerMW} MW`, className: 'text-sky-700' },
+    {
+      label: 'Agregaty:',
+      value: `${specs.generatorPowerMW} MW (${specs.generatorsCountLabel} szt.)`,
+      className: 'text-rose-700'
+    },
+    ...(specs.dryCoolersCount !== undefined
+      ? [{ label: 'Drycoolery:', value: `${specs.dryCoolersCount} szt.`, className: 'text-teal-700' }]
+      : []),
+    ...(specs.waterPerDayM3 !== undefined
+      ? [
+          {
+            label: 'Woda:',
+            value: `${formatNum(specs.waterPerDayM3)} m³/dobę`,
+            className: 'text-cyan-700'
+          }
+        ]
+      : [])
+  ];
 
   return (
     <div className="w-full h-full relative">
       <ReactMapContainer
         center={center}
-        zoom={14}
+        zoom={dataCenter.mapZoom}
         minZoom={10}
         maxZoom={18}
         zoomControl={false}
@@ -163,9 +211,14 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
           maxZoom={19}
         />
 
-        <MapControls tileProvider={tileProvider} onSelectTileProvider={onSelectTileProvider} />
+        <DataViewSync dataCenter={dataCenter} />
+        <MapControls
+          dataCenter={dataCenter}
+          tileProvider={tileProvider}
+          onSelectTileProvider={onSelectTileProvider}
+        />
 
-        {/* 1. WARSTWA: Obszar Chronionego Krajobrazu Doliny Widawki (z pliku data/dolina-winiawki.json) */}
+        {/* 1. WARSTWA: Obszar Chronionego Krajobrazu Doliny Widawki (jeśli dostępne dla tego DC) */}
         {widawkaLayer?.visible && (
           <GeoJSON
             key={`widawka-full-${widawkaLayer.opacity}`}
@@ -300,34 +353,36 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
               </GeoJSON>
             ))}
 
-        {/* 4b. WARSTWA: Zużycie Wody – Data Center vs Bełchatów (koła proporcjonalne do zużycia) */}
+        {/* 4b. WARSTWA: Zużycie Wody (koła proporcjonalne do zużycia) */}
         {waterLayer?.visible && (
           <React.Fragment>
-            {/* Koło: Bełchatów (52 331 mieszkańców) */}
-            <Circle
-              center={WATER_ANALYSIS.belchatow.centerCoords}
-              radius={WATER_ANALYSIS.mapCircles.cityRadiusMeters}
-              pathOptions={{
-                color: '#4f46e5',
-                weight: 2,
-                fillColor: '#818cf8',
-                fillOpacity: (waterLayer.opacity || 1) * 0.3
-              }}
-            >
-              <Tooltip permanent direction="center" className="consumption-circle-label consumption-circle-label-indigo">
-                <div>
-                  <div className="font-bold text-xs uppercase tracking-wide">Bełchatów</div>
-                  <div className="text-[10px] opacity-90">
-                    {WATER_ANALYSIS.belchatow.population.toLocaleString('pl-PL')} mieszk. &middot; {WATER_ANALYSIS.belchatow.annualLabel}/rok
+            {/* Koło: miasto referencyjne (jeśli dane dostępne) */}
+            {waterComparison && (
+              <Circle
+                center={waterComparison.city.centerCoords}
+                radius={water.mapCircles.cityRadiusMeters ?? 1000}
+                pathOptions={{
+                  color: '#4f46e5',
+                  weight: 2,
+                  fillColor: '#818cf8',
+                  fillOpacity: (waterLayer.opacity || 1) * 0.3
+                }}
+              >
+                <Tooltip permanent direction="center" className="consumption-circle-label consumption-circle-label-indigo">
+                  <div>
+                    <div className="font-bold text-xs uppercase tracking-wide">{waterComparison.city.name}</div>
+                    <div className="text-[10px] opacity-90">
+                      {waterComparison.city.population.toLocaleString('pl-PL')} mieszk. &middot; {waterComparison.city.annualLabel}/rok
+                    </div>
                   </div>
-                </div>
-              </Tooltip>
-            </Circle>
+                </Tooltip>
+              </Circle>
+            )}
 
-            {/* Koło: Data Center 500 MW */}
+            {/* Koło: Data Center – zużycie łączne */}
             <Circle
               center={dcCenterCoord}
-              radius={WATER_ANALYSIS.mapCircles.dcRadiusMeters}
+              radius={water.mapCircles.dcRadiusMeters}
               pathOptions={{
                 color: '#0891b2',
                 weight: 2,
@@ -337,9 +392,9 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
             >
               <Tooltip permanent direction="bottom" offset={[0, 26]} className="consumption-circle-label consumption-circle-label-cyan">
                 <div>
-                  <div className="font-bold text-xs uppercase tracking-wide">Data Center 500 MW</div>
-                  <div className="text-[10px] opacity-90">Bezpośrednio {WATER_ANALYSIS.direct.annualLabel}/rok</div>
-                  <div className="text-[10px] opacity-90">W sumie {WATER_ANALYSIS.total.annualLabel}/rok</div>
+                  <div className="font-bold text-xs uppercase tracking-wide">Data Center {water.powerMW} MW</div>
+                  <div className="text-[10px] opacity-90">Bezpośrednio {water.direct.annualLabel}/rok</div>
+                  <div className="text-[10px] opacity-90">W sumie {water.total.annualLabel}/rok</div>
                 </div>
               </Tooltip>
             </Circle>
@@ -347,7 +402,7 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
             {/* Koło wewnętrzne: Zużycie bezpośrednie Data Center (chłodzenie), na tle zużycia łącznego */}
             <Circle
               center={dcCenterCoord}
-              radius={WATER_ANALYSIS.mapCircles.dcDirectRadiusMeters}
+              radius={water.mapCircles.dcDirectRadiusMeters}
               pathOptions={{
                 color: '#0e7490',
                 weight: 2,
@@ -357,56 +412,62 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
             >
             </Circle>
 
-            {/* Koło przerywane: Roczna wydajność wód podziemnych (typowe ujęcie 40 m³/h) */}
-            <Circle
-              center={dcCenterCoord}
-              radius={WATER_ANALYSIS.mapCircles.dcGroundwaterRadiusMeters}
-              pathOptions={{
-                color: '#6d28d9',
-                weight: 2,
-                dashArray: '8 6',
-                fillColor: '#a78bfa',
-                fillOpacity: (waterLayer.opacity || 1) * 0.15
-              }}
-            >
-              <Tooltip permanent direction="top" offset={[0, -30]} className="consumption-circle-label consumption-circle-label-purple">
-                <div>
-                  <div className="font-bold text-xs uppercase tracking-wide">Wydajność wód podziemnych (typowe ujęcie)</div>
-                  <div className="text-[10px] opacity-90">{WATER_ANALYSIS.groundwater.annualTypicalLabel}/rok</div>
-                </div>
-              </Tooltip>
-            </Circle>
+            {/* Koło przerywane: Roczna wydajność wód podziemnych (jeśli dane dostępne) */}
+            {waterComparison &&
+              water.mapCircles.dcGroundwaterRadiusMeters !== undefined &&
+              waterComparison.groundwater && (
+                <Circle
+                  center={dcCenterCoord}
+                  radius={water.mapCircles.dcGroundwaterRadiusMeters}
+                  pathOptions={{
+                    color: '#6d28d9',
+                    weight: 2,
+                    dashArray: '8 6',
+                    fillColor: '#a78bfa',
+                    fillOpacity: (waterLayer.opacity || 1) * 0.15
+                  }}
+                >
+                  <Tooltip permanent direction="top" offset={[0, -30]} className="consumption-circle-label consumption-circle-label-purple">
+                    <div>
+                      <div className="font-bold text-xs uppercase tracking-wide">Wydajność wód podziemnych (typowe ujęcie)</div>
+                      <div className="text-[10px] opacity-90">{waterComparison.groundwater.annualTypicalLabel}/rok</div>
+                    </div>
+                  </Tooltip>
+                </Circle>
+              )}
           </React.Fragment>
         )}
 
-        {/* 4c. WARSTWA: Zużycie Prądu – Data Center vs Bełchatów (koła proporcjonalne do zużycia) */}
+        {/* 4c. WARSTWA: Zużycie Prądu (koła proporcjonalne do zużycia) */}
         {energyLayer?.visible && (
           <React.Fragment>
-            {/* Koło: Bełchatów (52 331 mieszkańców) */}
-            <Circle
-              center={ENERGY_ANALYSIS.belchatow.centerCoords}
-              radius={ENERGY_ANALYSIS.mapCircles.cityRadiusMeters}
-              pathOptions={{
-                color: '#4f46e5',
-                weight: 2,
-                fillColor: '#818cf8',
-                fillOpacity: (energyLayer.opacity || 1) * 0.3
-              }}
-            >
-              <Tooltip permanent direction="top" offset={[0, -6]} className="consumption-circle-label consumption-circle-label-indigo">
-                <div>
-                  <div className="font-bold text-xs uppercase tracking-wide">Bełchatów</div>
-                  <div className="text-[10px] opacity-90">
-                    {ENERGY_ANALYSIS.belchatow.population.toLocaleString('pl-PL')} mieszk. &middot; {ENERGY_ANALYSIS.belchatow.annualLabel}/rok
+            {/* Koło: miasto referencyjne (jeśli dane dostępne) */}
+            {energyComparison && (
+              <Circle
+                center={energyComparison.city.centerCoords}
+                radius={energy.mapCircles.cityRadiusMeters ?? 200}
+                pathOptions={{
+                  color: '#4f46e5',
+                  weight: 2,
+                  fillColor: '#818cf8',
+                  fillOpacity: (energyLayer.opacity || 1) * 0.3
+                }}
+              >
+                <Tooltip permanent direction="top" offset={[0, -6]} className="consumption-circle-label consumption-circle-label-indigo">
+                  <div>
+                    <div className="font-bold text-xs uppercase tracking-wide">{energyComparison.city.name}</div>
+                    <div className="text-[10px] opacity-90">
+                      {energyComparison.city.population.toLocaleString('pl-PL')} mieszk. &middot; {energyComparison.city.annualLabel}/rok
+                    </div>
                   </div>
-                </div>
-              </Tooltip>
-            </Circle>
+                </Tooltip>
+              </Circle>
+            )}
 
-            {/* Koło: Data Center 500 MW */}
+            {/* Koło: Data Center */}
             <Circle
               center={dcCenterCoord}
-              radius={ENERGY_ANALYSIS.mapCircles.dcRadiusMeters}
+              radius={energy.mapCircles.dcRadiusMeters}
               pathOptions={{
                 color: '#ca8a04',
                 weight: 2,
@@ -416,19 +477,19 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
             >
               <Tooltip permanent direction="bottom" offset={[0, 26]} className="consumption-circle-label consumption-circle-label-yellow">
                 <div>
-                  <div className="font-bold text-xs uppercase tracking-wide">Data Center 500 MW</div>
-                  <div className="text-[10px] opacity-90">{ENERGY_ANALYSIS.dc.annualLabel} prądu/rok</div>
+                  <div className="font-bold text-xs uppercase tracking-wide">Data Center {energy.powerMW} MW</div>
+                  <div className="text-[10px] opacity-90">{energy.dc.annualLabel} prądu/rok</div>
                 </div>
               </Tooltip>
             </Circle>
           </React.Fragment>
         )}
 
-        {/* 5. WARSTWA: Poligon Data Center z Trwałą Etykietą Nazwy */}
+        {/* 5. WARSTWA: Poligon Centrum Danych z Trwałą Etykietą Nazwy */}
         {dcLayer?.visible && (
           <GeoJSON
-            key={`dc-poly-${dcLayer.opacity}`}
-            data={dataCenterGeoJSON}
+            key={`dc-poly-${dcLayer.opacity}-${dataCenter.id}`}
+            data={dcGeoJson}
             style={{
               color: dcLayer.color,
               fillColor: dcLayer.fillColor,
@@ -439,30 +500,39 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
             {/* Trwała etykieta na poligonie centrum danych */}
             <Tooltip permanent direction="center" className="dc-polygon-label">
               <div>
-                <div className="font-bold text-xs uppercase tracking-wide">Planowane Data Center</div>
-                <div className="text-[10px] opacity-90">Powierzchnia: 52,6 ha</div>
+                <div className="font-bold text-xs uppercase tracking-wide">{dataCenter.texts.polygon.shortLabel}</div>
+                <div className="text-[10px] opacity-90">Powierzchnia: {formatNum(specs.areaHa, 1)} ha</div>
               </div>
             </Tooltip>
 
             <Popup>
               <div className="p-1 space-y-2 max-w-sm">
                 <div className="border-b border-slate-200 pb-1">
-                  <h4 className="font-bold text-base text-sky-800">Hyperscale Data Center Domiechowice</h4>
-                  <span className="text-xs text-slate-600">Powierzchnia: 52,6016 ha</span>
+                  <h4 className="font-bold text-base text-sky-800">{specs.name}</h4>
+                  <span className="text-xs text-slate-600">
+                    Powierzchnia: {formatNum(specs.areaHa, 4)} ha
+                  </span>
+                  <div className="text-xs text-slate-500">{specs.location}</div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-slate-100 p-2 rounded border border-slate-200">
-                    <div className="text-slate-500">Moc:</div>
-                    <div className="font-bold text-sky-700">~500 MW</div>
-                  </div>
-                  <div className="bg-slate-100 p-2 rounded border border-slate-200">
-                    <div className="text-slate-500">Agregaty:</div>
-                    <div className="font-bold text-rose-700">720 MW (100+ szt.)</div>
-                  </div>
+                  {popupSpecs.map((item) => (
+                    <div key={item.label} className="bg-slate-100 p-2 rounded border border-slate-200">
+                      <div className="text-slate-500">{item.label}</div>
+                      <div className={`font-bold ${item.className}`}>{item.value}</div>
+                    </div>
+                  ))}
                 </div>
-                <div className="text-xs text-slate-700">
-                  Inwestor: <strong>Data Center Bełchatów Sp. z o.o.</strong>
-                </div>
+                {specs.investor && (
+                  <div className="text-xs text-slate-700">
+                    Inwestor: <strong>{specs.investor}</strong>
+                  </div>
+                )}
+                {specs.status && (
+                  <div className="text-xs text-slate-700">
+                    Status: <strong>{specs.status}</strong>
+                    {specs.statusDate ? ` (stan na ${specs.statusDate})` : ''}
+                  </div>
+                )}
               </div>
             </Popup>
           </GeoJSON>
