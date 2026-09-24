@@ -114,9 +114,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                       <span className={chipClass}>
                         {optionSpecs.generatorsCountLabel} agregatów ({optionSpecs.generatorPowerMW} MW)
                       </span>
-                      {optionSpecs.dryCoolersCount !== undefined && (
-                        <span className={chipClass}>{optionSpecs.dryCoolersCount} drycoolerów</span>
-                      )}
                       {optionSpecs.waterPerDayM3 !== undefined && (
                         <span className={chipClass}>{formatNum(optionSpecs.waterPerDayM3)} m³/dobę</span>
                       )}
@@ -153,15 +150,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             <div className="flex items-center space-x-1.5">
               <span className="text-slate-400">Woda:</span>
               <span className="font-bold text-cyan-400">{formatNum(specs.waterPerDayM3)} m³/dobę</span>
-            </div>
-          </>
-        )}
-        {specs.dryCoolersCount !== undefined && (
-          <>
-            <div className="h-3 w-px bg-slate-700" />
-            <div className="flex items-center space-x-1.5">
-              <span className="text-slate-400">Drycoolery:</span>
-              <span className="font-bold text-teal-400">{specs.dryCoolersCount} szt.</span>
             </div>
           </>
         )}

@@ -48,15 +48,97 @@ interface MapContainerProps {
   onSelectTileProvider: (provider: MapTileProvider) => void;
 }
 
-/** Przelot mapy do centrum danych po jego zmianie (bez animacji przy pierwszym renderze). */
+/** Zapas na etykiety znaczników (m) – etykieta DC rysuje się pod kołem. */
+const MARKER_LABEL_MARGIN_M = 100;
+const M_PER_DEG_LAT = 111132;
+const M_PER_DEG_LNG = 111319.49;
+
+type BoundsTuple = [[number, number], [number, number]];
+
+/**
+ * Granice widoku obejmujące wszystkie znaczniki DC i miasta – razem z kołami
+ * proporcjonalnymi (największe koło DC z wody/energii/wód podziemnych oraz
+ * koła miasta z obu porównań). Zwraca null, gdy DC nie ma danych o mieście.
+ */
+function allMarkersBounds(dataCenter: DataCenterProfile): BoundsTuple | null {
+  const water = dataCenter.water;
+  const energy = dataCenter.energy;
+
+  const cities: Array<{ coord: [number, number]; radius: number }> = [];
+  if (water.comparison) {
+    cities.push({
+      coord: water.comparison.city.centerCoords,
+      radius: water.mapCircles.cityRadiusMeters ?? 0
+    });
+  }
+  if (energy.comparison) {
+    cities.push({
+      coord: energy.comparison.city.centerCoords,
+      radius: energy.mapCircles.cityRadiusMeters ?? 0
+    });
+  }
+  if (cities.length === 0) return null;
+
+  const markers = [
+    {
+      coord: dataCenter.mapCenter,
+      radius: Math.max(
+        water.mapCircles.dcRadiusMeters,
+        water.mapCircles.dcDirectRadiusMeters,
+        water.mapCircles.dcGroundwaterRadiusMeters ?? 0,
+        energy.mapCircles.dcRadiusMeters
+      )
+    },
+    ...cities
+  ];
+
+  let minLat = Infinity;
+  let minLng = Infinity;
+  let maxLat = -Infinity;
+  let maxLng = -Infinity;
+  for (const { coord, radius } of markers) {
+    const r = radius + MARKER_LABEL_MARGIN_M;
+    const latSpan = r / M_PER_DEG_LAT;
+    const lngSpan = r / (M_PER_DEG_LNG * Math.cos((coord[0] * Math.PI) / 180));
+    minLat = Math.min(minLat, coord[0] - latSpan);
+    maxLat = Math.max(maxLat, coord[0] + latSpan);
+    minLng = Math.min(minLng, coord[1] - lngSpan);
+    maxLng = Math.max(maxLng, coord[1] + lngSpan);
+  }
+  return [[minLat, minLng], [maxLat, maxLng]];
+}
+
+/**
+ * Ustawia widok tak, by na ekranie mieściły się wszystkie znaczniki
+ * (centrum danych + pobliskie miasto) wraz z kołami, z uwzględnieniem
+ * paneli UI nachodzących na mapę (warstwy z lewej, legenda z prawej).
+ */
+function fitAllMarkers(map: L.Map, dataCenter: DataCenterProfile, animate: boolean): void {
+  const bounds = allMarkersBounds(dataCenter);
+  if (!bounds) {
+    if (animate) map.flyTo(dataCenter.mapCenter, dataCenter.mapZoom, { duration: 1.0 });
+    else map.setView(dataCenter.mapCenter, dataCenter.mapZoom);
+    return;
+  }
+  // Odsunięcie od krawędzi: panele mają do ~384 px szerokości (Point = [x, y]).
+  const sideInset = Math.min(384, Math.round(window.innerWidth * 0.45));
+  const options: L.FitBoundsOptions = {
+    paddingTopLeft: [sideInset, 16],
+    paddingBottomRight: [sideInset, 16]
+  };
+  if (animate) map.flyToBounds(bounds, { ...options, duration: 1.0 });
+  else map.fitBounds(bounds, options);
+}
+
+/** Ustawienie widoku na wszystkie znaczniki po zmianie DC (bez animacji przy pierwszym renderze). */
 const DataViewSync: React.FC<{ dataCenter: DataCenterProfile }> = ({ dataCenter }) => {
   const map = useMap();
   const previousIdRef = useRef(dataCenter.id);
 
   useEffect(() => {
-    if (previousIdRef.current === dataCenter.id) return;
+    const switched = previousIdRef.current !== dataCenter.id;
     previousIdRef.current = dataCenter.id;
-    map.flyTo(dataCenter.mapCenter, dataCenter.mapZoom, { duration: 1.0 });
+    fitAllMarkers(map, dataCenter, switched);
   }, [map, dataCenter]);
 
   return null;
@@ -70,7 +152,7 @@ const MapControls: React.FC<{
   const map = useMap();
 
   const handleResetView = () => {
-    map.flyTo(dataCenter.mapCenter, dataCenter.mapZoom, { duration: 1.0 });
+    fitAllMarkers(map, dataCenter, true);
   };
 
   return (
@@ -103,10 +185,10 @@ const MapControls: React.FC<{
       <button
         onClick={handleResetView}
         className="bg-white/95 border border-slate-300 p-2 rounded-xl text-slate-700 hover:text-sky-600 transition-all flex items-center space-x-1.5 text-xs font-medium shadow-lg backdrop-blur-md"
-        title="Centruj mapę na Centrum Danych"
+        title="Pokaż centrum danych i miasto"
       >
         <Crosshair className="w-4 h-4 text-sky-600" />
-        <span className="hidden sm:inline">Wyśrodkuj na Centrum Danych</span>
+        <span className="hidden sm:inline">Pokaż DC i miasto</span>
       </button>
     </div>
   );
@@ -181,9 +263,6 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
       value: `${specs.generatorPowerMW} MW (${specs.generatorsCountLabel} szt.)`,
       className: 'text-rose-700'
     },
-    ...(specs.dryCoolersCount !== undefined
-      ? [{ label: 'Drycoolery:', value: `${specs.dryCoolersCount} szt.`, className: 'text-teal-700' }]
-      : []),
     ...(specs.waterPerDayM3 !== undefined
       ? [
           {

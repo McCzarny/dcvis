@@ -348,7 +348,7 @@ const DOMIECHOWICE_ENERGY = makeEnergyAnalysis({
 const domiechowice: DataCenterProfile = {
   id: 'domiechowice',
   specs: {
-    name: 'Hyperscale Data Center Domiechowice',
+    name: 'DC Domiechowice',
     shortName: 'Domiechowice',
     location: 'Domiechowice, Gmina Bełchatów, Powiat Bełchatowski',
     district: 'Łódzkie, Polska',
@@ -509,7 +509,7 @@ const piasecznoEnergy = makeEnergyAnalysis({
 const piaseczno: DataCenterProfile = {
   id: 'piaseczno',
   specs: {
-    name: 'Data Center Piaseczno',
+    name: 'DC Piaseczno',
     shortName: 'Piaseczno',
     location: 'Piaseczno, powiat piaseczyński',
     district: 'Mazowieckie, Polska',

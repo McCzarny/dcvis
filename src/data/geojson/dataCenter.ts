@@ -14,7 +14,7 @@ export const domiechowiceGeoJSON: Feature<Polygon> = {
     ]]
   },
   properties: {
-    name: "Hyperscale Data Center Domiechowice",
+    name: "DC Domiechowice",
     investor: "Data Center Bełchatów Sp. z o.o. / Next DC Sp. z o.o.",
     areaHa: 52.6016,
     plotsCount: 71,
