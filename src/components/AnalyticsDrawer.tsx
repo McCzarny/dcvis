@@ -15,7 +15,7 @@ import {
   LabelList
 } from 'recharts';
 import {
-  NOISE_DECAY_CHART_DATA,
+  getNoiseChartData,
   THERMAL_ELEVATION_CHART_DATA
 } from '../data/layersRegistry';
 import {
@@ -67,7 +67,8 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ dataCenter, is
     : (availableTabs[0] ?? 'water');
 
   // Obliczanie szumu w warunkach neutralnych oraz przy nocnej inwersji (model 1/r^1.5, +5 dBA od 500 m)
-  const chartNoiseData = NOISE_DECAY_CHART_DATA.map((item) => {
+  // Dla Piaseczna: poziomy szacowane (100 m – 2 km), dla Domiechowic – model 1/r^1.5.
+  const chartNoiseData = getNoiseChartData(dataCenter.id).map((item) => {
     const inversion = item.distance >= 500;
     return {
       ...item,
@@ -203,7 +204,11 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ dataCenter, is
                     Spadek Natężenia Dźwięku – Wentylatory (ciągły) i Agregaty Diesla (testy)
                   </h3>
                   <span className="text-xs text-rose-400 font-mono">
-                    Model 1/r<sup>1,5</sup> &middot; Strefa przekroczeń: 0–2000 m
+                    {dataCenter.id === 'piaseczno'
+                      ? 'Poziomy szacowane · 100–2000 m'
+                      : (
+                        <>Model 1/r<sup>1,5</sup> &middot; Strefa przekroczeń: 0–2000 m</>
+                      )}
                   </span>
                 </div>
 
@@ -275,24 +280,49 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ dataCenter, is
 
               {/* Tabela szczegółów opisu hałasu */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                  <div className="font-bold text-rose-400 mb-1">150–500 m (Strefa Krytyczna)</div>
-                  <p className="text-slate-300">
-                    Hałas 65–57 dBA. Znaczne przekroczenie normy nocnej (40 dBA) o 17–25 dB. Ciągły szum wentylatorów bardziej uciążliwy niż tymczasowy hałas generatorów.
-                  </p>
-                </div>
-                <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                  <div className="font-bold text-amber-400 mb-1">500–1000 m (Strefa Przekroczeń)</div>
-                  <p className="text-slate-300">
-                    Spadek do 53 dBA. Norma nocna wciąż przekroczona o ~13 dB. Hałas wentylatorów i generatorów zrównoważy się na tym dystansie.
-                  </p>
-                </div>
-                <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                  <div className="font-bold text-purple-400 mb-1">2–4 km (Niskie Częstotliwości)</div>
-                  <p className="text-slate-300">
-                    Niskie częstotliwości (&lt;200 Hz) nie są pochłaniane przez powietrze ani ekrany akustyczne. Słyszalne do 3,2–4 km. dBA drastycznie niedoszacowuje uciążliwości.
-                  </p>
-                </div>
+                {dataCenter.id === 'piaseczno' ? (
+                  <>
+                    <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                      <div className="font-bold text-rose-400 mb-1">100–250 m (Strefa Krytyczna)</div>
+                      <p className="text-slate-300">
+                        Wentylatory 71,4–65,5 dBA, testy generatorów 74,0–68,0 dBA. Znaczne przekroczenie normy nocnej (40 dBA) i dziennej (50 dBA).
+                      </p>
+                    </div>
+                    <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                      <div className="font-bold text-amber-400 mb-1">500–1000 m (Strefa Przekroczeń)</div>
+                      <p className="text-slate-300">
+                        Wentylatory 60,9–56,4 dBA, generatory 63,5–59,0 dBA. Norma nocna przekroczona o ~16–23 dB, dzienna również przekroczona.
+                      </p>
+                    </div>
+                    <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                      <div className="font-bold text-purple-400 mb-1">2 km (Granica zasięgu)</div>
+                      <p className="text-slate-300">
+                        Wentylatory 51,9 dBA, generatory 54,5 dBA. Nadal powyżej normy nocnej (40 dBA) i – w przypadku generatorów – dziennej (50 dBA).
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                      <div className="font-bold text-rose-400 mb-1">150–500 m (Strefa Krytyczna)</div>
+                      <p className="text-slate-300">
+                        Hałas 65–57 dBA. Znaczne przekroczenie normy nocnej (40 dBA) o 17–25 dB. Ciągły szum wentylatorów bardziej uciążliwy niż tymczasowy hałas generatorów.
+                      </p>
+                    </div>
+                    <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                      <div className="font-bold text-amber-400 mb-1">500–1000 m (Strefa Przekroczeń)</div>
+                      <p className="text-slate-300">
+                        Spadek do 53 dBA. Norma nocna wciąż przekroczona o ~13 dB. Hałas wentylatorów i generatorów zrównoważy się na tym dystansie.
+                      </p>
+                    </div>
+                    <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                      <div className="font-bold text-purple-400 mb-1">2–4 km (Niskie Częstotliwości)</div>
+                      <p className="text-slate-300">
+                        Niskie częstotliwości (&lt;200 Hz) nie są pochłaniane przez powietrze ani ekrany akustyczne. Słyszalne do 3,2–4 km. dBA drastycznie niedoszacowuje uciążliwości.
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           ) : tab === 'thermal' ? (

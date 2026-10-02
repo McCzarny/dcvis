@@ -528,7 +528,7 @@ const piaseczno: DataCenterProfile = {
   water: piasecznoWater,
   energy: piasecznoEnergy,
   hasPowerPlantComparison: false,
-  hasNoiseAnalysis: false,
+  hasNoiseAnalysis: true,
   hasThermalAnalysis: false,
   texts: {
     headerSubtitle: 'Geoportal GIS i Analiza Oddziaływania Środowiskowego (Piaseczno, powiat piaseczyński)',

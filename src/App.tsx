@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { DataCenterKey, GISLayer, MapTileProvider, PresetKey } from './types/gis';
-import { applyPresetToLayers, buildInitialLayers, getAvailablePresets } from './data/layersRegistry';
+import { applyPresetToLayers, buildInitialLayers } from './data/layersRegistry';
 import { DataCenterProfile, DEFAULT_DATA_CENTER_ID, getDataCenter } from './data/dataCenters';
 import { HeaderNav } from './components/HeaderNav';
 import { MapContainerComponent } from './components/MapContainer';
@@ -11,8 +11,9 @@ import { ProjectDocsModal } from './components/ProjectDocsModal';
 
 export const App: React.FC = () => {
   const [dataCenterId, setDataCenterId] = useState<DataCenterKey>(DEFAULT_DATA_CENTER_ID);
+  // Domyślnie od pierwszego renderu: preset "Hałas wentylatorów" (continuous_noise).
   const [layers, setLayers] = useState<GISLayer[]>(() =>
-    buildInitialLayers(getDataCenter(DEFAULT_DATA_CENTER_ID))
+    applyPresetToLayers(buildInitialLayers(getDataCenter(DEFAULT_DATA_CENTER_ID)), 'continuous_noise')
   );
   // Domyślnie podkład Standard (OSM)
   const [tileProvider, setTileProvider] = useState<MapTileProvider>('osm');
@@ -21,12 +22,6 @@ export const App: React.FC = () => {
   const [activePreset, setActivePreset] = useState<PresetKey | null>('continuous_noise');
 
   const dataCenter: DataCenterProfile = getDataCenter(dataCenterId);
-
-  // Inicjalizuj preset "Hałas wentylatorów" na starcie
-  useEffect(() => {
-    handleApplyPreset('continuous_noise');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleToggleLayer = (id: string) => {
     setLayers((prev) =>
@@ -46,22 +41,15 @@ export const App: React.FC = () => {
   };
 
   /**
-   * Zmiana centrum danych: przebudowuje listę warstw (dostępne tylko te,
-   * które obsługują dane DC) i dobiera preset dostępny w nowej lokalizacji.
+   * Zmiana centrum danych: przebudowuje listę warstw i ZAWSZE wraca do
+   * domyślnego presetu "Hałas wentylatorów" (dostępny w każdej lokalizacji).
    */
   const handleChangeDataCenter = (id: DataCenterKey) => {
     if (id === dataCenterId) return;
 
     const nextDataCenter = getDataCenter(id);
     const nextLayers = buildInitialLayers(nextDataCenter);
-    const availablePresets = getAvailablePresets(nextLayers).map((p) => p.id);
-
-    let nextPreset: PresetKey | null = activePreset;
-    if (activePreset !== null && !availablePresets.includes(activePreset)) {
-      nextPreset = availablePresets.includes('continuous_noise')
-        ? 'continuous_noise'
-        : (availablePresets[0] ?? null);
-    }
+    const nextPreset: PresetKey = 'continuous_noise';
 
     setDataCenterId(id);
     setActivePreset(nextPreset);

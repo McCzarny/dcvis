@@ -227,8 +227,8 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
 
   // Dane zabudowań mieszkalnych (jeśli warstwa jest dostępna w tym DC)
   const residentialBuildings = useMemo(
-    () => (residentialLayer ? getResidentialBuildings(dcGeoJson) : []),
-    [residentialLayer, dcGeoJson]
+    () => (residentialLayer ? getResidentialBuildings(dcGeoJson, dataCenter.id) : []),
+    [residentialLayer, dcGeoJson, dataCenter.id]
   );
 
   const dcCenterCoord: [number, number] = [center[0], center[1]];
@@ -350,7 +350,7 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
             .reverse()
             .map((buf) => (
               <GeoJSON
-                key={`noise-cont-${buf.distanceMeters}-${noiseContLayer.opacity}`}
+                key={`noise-cont-${dataCenter.id}-${buf.distanceMeters}-${noiseContLayer.opacity}`}
                 data={buf.geoJson}
                 style={{
                   color: buf.color,
@@ -380,7 +380,7 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
             .reverse()
             .map((buf) => (
               <GeoJSON
-                key={`noise-gen-${buf.distanceMeters}-${noiseGenLayer.opacity}`}
+                key={`noise-gen-${dataCenter.id}-${buf.distanceMeters}-${noiseGenLayer.opacity}`}
                 data={buf.geoJson}
                 style={{
                   color: buf.color,
@@ -410,7 +410,7 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
             .reverse()
             .map((buf) => (
               <GeoJSON
-                key={`thermal-${buf.distanceMeters}-${thermalLayer.opacity}`}
+                key={`thermal-${dataCenter.id}-${buf.distanceMeters}-${thermalLayer.opacity}`}
                 data={buf.geoJson}
                 style={{
                   color: buf.color,
@@ -641,7 +641,7 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
                 icon={homeDivIcon}
               >
                 <Tooltip permanent direction="top" className="residential-building-label">
-                  <span>{building.distanceToBoundaryMeters} m do Data Center</span>
+                  <span>{building.distanceToBoundaryMeters} m - {building.name}</span>
                 </Tooltip>
 
                 <Popup>

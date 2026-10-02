@@ -37,6 +37,7 @@ interface LayerTemplate {
   weight?: number;
   type: GISLayer['type'];
   buffers?: GISLayer['buffers'];
+  buffersFor?: (dc: DataCenterProfile) => GISLayer['buffers'];
   geoJsonData?: any;
   dataFor?: (dc: DataCenterProfile) => any;
   sources?: string[];
@@ -91,6 +92,105 @@ const generatorNoiseDescription = (dc: DataCenterProfile): string =>
   `Zasięg słyszalności miesięcznych testów obciążeniowych ${dc.specs.generatorsCountLabel} ` +
   `agregatów (${dc.specs.generatorPowerMW} MW).`;
 
+const continuousNoiseDescription = (dc: DataCenterProfile): string => {
+  if (dc.id === 'piaseczno') {
+    return (
+      'Poziomy szacowane dla Piaseczna: 100 m – 71,4 dBA, 250 m – 65,5 dBA, ' +
+      '500 m – 60,9 dBA, 1 km – 56,4 dBA, 2 km – 51,9 dBA. ' +
+      'Odniesienie do norm: 40 dBA (pora nocna) / 50 dBA (pora dzienna) dla zabudowy jednorodzinnej.'
+    );
+  }
+  return (
+    'Model 1/r^1.5 z odbiciami gruntowymi i atmosferycznymi. Źródło: 65 dBA w odległości 152,4 m (500 stóp). Spadek ~4,5 dB przy każdym podwojeniu odległości.'
+  );
+};
+
+const PIASECZNO_CONTINUOUS_BUFFERS: NonNullable<GISLayer['buffers']> = [
+  {
+    distanceMeters: 100,
+    label: 'Strefa Wysokiego Hałasu (100 m)',
+    valueText: '71,4 dBA',
+    color: '#b91c1c',
+    fillColor: '#dc2626',
+    description: 'Poziom szacowany dla Piaseczna w odległości 100 m od źródła (wentylatory).'
+  },
+  {
+    distanceMeters: 250,
+    label: 'Strefa Wysokiego Hałasu (250 m)',
+    valueText: '65,5 dBA',
+    color: '#c2410c',
+    fillColor: '#ea580c',
+    description: 'Poziom szacowany dla Piaseczna w odległości 250 m. Znaczne przekroczenie normy nocnej (40 dBA) i dziennej (50 dBA).'
+  },
+  {
+    distanceMeters: 500,
+    label: 'Strefa Podwyższonego Hałasu (500 m)',
+    valueText: '60,9 dBA',
+    color: '#d97706',
+    fillColor: '#f59e0b',
+    description: 'Poziom szacowany dla Piaseczna w odległości 500 m. Przekroczenie normy nocnej o ~21 dB.'
+  },
+  {
+    distanceMeters: 1000,
+    label: 'Strefa Umiarkowanego Hałasu (1000 m)',
+    valueText: '56,4 dBA',
+    color: '#ca8a04',
+    fillColor: '#eab308',
+    description: 'Poziom szacowany dla Piaseczna w odległości 1 km. Przekroczenie normy nocnej i dziennej.'
+  },
+  {
+    distanceMeters: 2000,
+    label: 'Strefa Obniżonego Hałasu (2000 m)',
+    valueText: '51,9 dBA',
+    color: '#65a30d',
+    fillColor: '#84cc16',
+    description: 'Poziom szacowany dla Piaseczna w odległości 2 km. Powyżej normy nocnej (40 dBA).'
+  }
+];
+
+const PIASECZNO_GENERATOR_BUFFERS: NonNullable<GISLayer['buffers']> = [
+  {
+    distanceMeters: 100,
+    label: 'Strefa Testów Diesla (100 m)',
+    valueText: '74,0 dBA',
+    color: '#7f1d1d',
+    fillColor: '#991b1b',
+    description: 'Poziom szacowany dla Piaseczna podczas testów generatorów w odległości 100 m.'
+  },
+  {
+    distanceMeters: 250,
+    label: 'Strefa Testów Diesla (250 m)',
+    valueText: '68,0 dBA',
+    color: '#991b1b',
+    fillColor: '#b91c1c',
+    description: 'Poziom szacowany dla Piaseczna podczas testów generatorów w odległości 250 m.'
+  },
+  {
+    distanceMeters: 500,
+    label: 'Testy Diesla (500 m)',
+    valueText: '63,5 dBA',
+    color: '#dc2626',
+    fillColor: '#ef4444',
+    description: 'Poziom szacowany dla Piaseczna podczas testów generatorów w odległości 500 m.'
+  },
+  {
+    distanceMeters: 1000,
+    label: 'Testy Diesla (1000 m)',
+    valueText: '59,0 dBA',
+    color: '#b91c1c',
+    fillColor: '#dc2626',
+    description: 'Poziom szacowany dla Piaseczna podczas testów generatorów w odległości 1 km.'
+  },
+  {
+    distanceMeters: 2000,
+    label: 'Testy Diesla (2000 m)',
+    valueText: '54,5 dBA',
+    color: '#991b1b',
+    fillColor: '#b91c1c',
+    description: 'Poziom szacowany dla Piaseczna podczas testów generatorów w odległości 2 km.'
+  }
+];
+
 const LAYER_TEMPLATES: LayerTemplate[] = [
   {
     id: 'data_center_polygon',
@@ -120,14 +220,13 @@ const LAYER_TEMPLATES: LayerTemplate[] = [
     weight: 2,
     type: 'residential_markers',
     sources: ['Pomiary odległościowe GIS', 'Wydział Geodezji'],
-    availableFor: ['domiechowice']
+    availableFor: ['domiechowice', 'piaseczno']
   },
   {
     id: 'noise_continuous_buffers',
     name: 'Hałas Ciągły Wentylatorów (Chillers)',
     category: 'akustyka',
-    description:
-      'Model 1/r^1.5 z odbiciami gruntowymi i atmosferycznymi. Źródło: 65 dBA w odległości 152,4 m (500 stóp). Spadek ~4,5 dB przy każdym podwojeniu odległości.',
+    describe: continuousNoiseDescription,
     visible: true,
     opacity: 0.4,
     color: '#ea580c', // orange-600
@@ -184,12 +283,13 @@ const LAYER_TEMPLATES: LayerTemplate[] = [
           'Niskie częstotliwości (<200 Hz) z HVAC nie są pochłaniane przez powietrze, drzewa ani ekrany akustyczne – pozostają słyszalne nawet do 4 km.'
       }
     ],
+    buffersFor: (dc) => (dc.id === 'piaseczno' ? PIASECZNO_CONTINUOUS_BUFFERS : undefined),
     sources: [
       'Lyver Data Center Noise Study (2022) – protectpwc.org',
       'https://protectpwc.org/wp-content/uploads/2023/02/Lyver-Data-Center-Noise-Study-123122.pdf',
       'Model 1/r^1.5 z odbiciami gruntowymi i inwersjami atmosferycznymi'
     ],
-    availableFor: ['domiechowice']
+    availableFor: ['domiechowice', 'piaseczno']
   },
   {
     id: 'noise_generators_buffers',
@@ -235,11 +335,12 @@ const LAYER_TEMPLATES: LayerTemplate[] = [
         description: 'Poniżej normy dziennej, wciąż powyżej nocnej. Niskie częstotliwości słyszalne z dużej odległości.'
       }
     ],
+    buffersFor: (dc) => (dc.id === 'piaseczno' ? PIASECZNO_GENERATOR_BUFFERS : undefined),
     sources: [
       'Decibel International – Kompleksowy przewodnik po dźwiękoszczelności centrów danych',
       'https://www.decibelinternational.pl/blog/kompleksowy-przewodnik-po-d-wi-koszczelno-ci-i-optymalizacji-akustycznej-dla-centr-w-danych-6/'
     ],
-    availableFor: ['domiechowice']
+    availableFor: ['domiechowice', 'piaseczno']
   },
   {
     id: 'thermal_impact_buffers',
@@ -383,7 +484,7 @@ export function buildInitialLayers(dc: DataCenterProfile): GISLayer[] {
     dashArray: t.dashArray,
     weight: t.weight,
     type: t.type,
-    buffers: t.buffers,
+    buffers: t.buffersFor ? (t.buffersFor(dc) ?? t.buffers) : t.buffers,
     detailsHtml: undefined,
     sources: t.sourcesFor ? t.sourcesFor(dc) : t.sources,
     geoJsonData: t.dataFor ? t.dataFor(dc) : t.geoJsonData
@@ -467,10 +568,10 @@ export const PRESETS: PresetDefinition[] = [
   }
 ];
 
-/** Presety, dla których jakakolwiek warstwa jest dostępna w danym DC. */
+/** Presety, dla których wszystkie docelowe warstwy są dostępne w danym DC. */
 export function getAvailablePresets(layers: GISLayer[]): PresetDefinition[] {
   const ids = new Set(layers.map((l) => l.id));
-  return PRESETS.filter((p) => p.targetLayerIds.some((id) => ids.has(id)));
+  return PRESETS.filter((p) => p.targetLayerIds.every((id) => ids.has(id)));
 }
 
 /** Ustawia widoczność warstw zgodnie z wybranym presetem (warstwa DC zawsze widoczna). */
@@ -498,6 +599,20 @@ export const NOISE_DECAY_CHART_DATA = [
   { distance: 3200, noiseContinuous: 45.1, noiseGenerator: 45.1, label: '3,2 km', normNight: 40, normDay: 50, note: 'Niskie częstotliwości wciąż wyraźnie słyszalne' },
   { distance: 4000, noiseContinuous: 43.8, noiseGenerator: 43.8, label: '4 km', normNight: 40, normDay: 50, note: 'Granica wyraźnej słyszalności niskich częstotliwości' },
 ];
+
+/** Poziomy szacowane dla Piaseczna (wentylatory / testy generatorów). */
+export const PIASECZNO_NOISE_DECAY_CHART_DATA = [
+  { distance: 100, noiseContinuous: 71.4, noiseGenerator: 74.0, label: '100 m', normNight: 40, normDay: 50, note: 'Poziom szacowany (Piaseczno)' },
+  { distance: 250, noiseContinuous: 65.5, noiseGenerator: 68.0, label: '250 m', normNight: 40, normDay: 50, note: 'Poziom szacowany (Piaseczno)' },
+  { distance: 500, noiseContinuous: 60.9, noiseGenerator: 63.5, label: '500 m', normNight: 40, normDay: 50, note: 'Poziom szacowany (Piaseczno)' },
+  { distance: 1000, noiseContinuous: 56.4, noiseGenerator: 59.0, label: '1 km', normNight: 40, normDay: 50, note: 'Poziom szacowany (Piaseczno)' },
+  { distance: 2000, noiseContinuous: 51.9, noiseGenerator: 54.5, label: '2 km', normNight: 40, normDay: 50, note: 'Poziom szacowany (Piaseczno)' },
+];
+
+/** Zwraca dane wykresu hałasu dla danego centrum (Piaseczno – poziomy szacowane). */
+export function getNoiseChartData(dcId: DataCenterKey) {
+  return dcId === 'piaseczno' ? PIASECZNO_NOISE_DECAY_CHART_DATA : NOISE_DECAY_CHART_DATA;
+}
 
 export const THERMAL_ELEVATION_CHART_DATA = [
   { distance: 0, tempRise: 2.07, label: '0 km', threshold: 0.5, note: 'Krawędź centrum danych' },
