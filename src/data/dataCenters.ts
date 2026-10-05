@@ -676,7 +676,7 @@ const trzebnica: DataCenterProfile = {
       shortLabel: 'Centrum Danych',
       description:
         'Obrys centrum danych w Trzebnicy wyliczony z podanych współrzędnych (WGS84). ' +
-        'Moc przyłącza ok. 1600 MW (na razie przyjęta jako moc IT). ' +
+        'Moc przyłącza ok. 1600 MW. ' +
         'Agregaty, zużycie wody, hałas i inwestor – w przygotowaniu.',
       sources: ['Współrzędne obrysu – dane własne', 'Obliczenie powierzchni: turf.js']
     },
@@ -696,7 +696,7 @@ const trzebnica: DataCenterProfile = {
         'Założenie: praca ciągła 24/7 przez 365 dni'
       ],
       docsSources: [
-        { label: 'Dane własne inwestora', note: 'Moc przyłącza: 1600 MW (na razie przyjęta jako moc IT).' },
+        { label: 'Dane własne inwestora', note: 'Moc przyłącza: 1600 MW.' },
         { label: 'GUS (stat.gov.pl)', note: 'Zużycie energii elektrycznej na 1 mieszkańca: 833,6 kWh (miasta woj. dolnośląskiego, 2024).' },
         { label: 'Wikipedia – Trzebnica', url: 'https://pl.wikipedia.org/wiki/Trzebnica', note: 'Liczba mieszkańców Trzebnicy: 13 674.' },
         { label: 'Założenie metodologiczne', note: 'Praca ciągła 24/7 przez 365 dni w roku.' }
