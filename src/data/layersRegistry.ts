@@ -89,8 +89,8 @@ const energyLayerDescription = (dc: DataCenterProfile): string => {
 
 const generatorNoiseDescription = (dc: DataCenterProfile): string =>
   `Model 1/r^1.5. Źródło: 95 dBA w odległości 7 m od wydechu silnika diesla. ` +
-  `Zasięg słyszalności miesięcznych testów obciążeniowych ${dc.specs.generatorsCountLabel} ` +
-  `agregatów (${dc.specs.generatorPowerMW} MW).`;
+  `Zasięg słyszalności miesięcznych testów obciążeniowych ${dc.specs.generatorsCountLabel ?? 'brak danych'} ` +
+  `agregatów (${dc.specs.generatorPowerMW ?? 'brak danych'} MW).`;
 
 const continuousNoiseDescription = (dc: DataCenterProfile): string => {
   if (dc.id === 'piaseczno') {
@@ -205,7 +205,7 @@ const LAYER_TEMPLATES: LayerTemplate[] = [
     type: 'geojson',
     dataFor: (dc) => dc.geoJson,
     sourcesFor: (dc) => dc.texts.polygon.sources,
-    availableFor: ['domiechowice', 'piaseczno']
+    availableFor: ['domiechowice', 'piaseczno', 'trzebnica']
   },
   {
     id: 'residential_buildings_layer',
@@ -220,7 +220,7 @@ const LAYER_TEMPLATES: LayerTemplate[] = [
     weight: 2,
     type: 'residential_markers',
     sources: ['Pomiary odległościowe GIS', 'Wydział Geodezji'],
-    availableFor: ['domiechowice', 'piaseczno']
+    availableFor: ['domiechowice', 'piaseczno', 'trzebnica']
   },
   {
     id: 'noise_continuous_buffers',
@@ -435,7 +435,7 @@ const LAYER_TEMPLATES: LayerTemplate[] = [
     weight: 2,
     type: 'energy_consumption',
     sourcesFor: (dc) => dc.texts.energy.sources,
-    availableFor: ['domiechowice', 'piaseczno']
+    availableFor: ['domiechowice', 'piaseczno', 'trzebnica']
   },
   {
     id: 'dolina_widawki_polygon',
@@ -572,6 +572,16 @@ export const PRESETS: PresetDefinition[] = [
 export function getAvailablePresets(layers: GISLayer[]): PresetDefinition[] {
   const ids = new Set(layers.map((l) => l.id));
   return PRESETS.filter((p) => p.targetLayerIds.every((id) => ids.has(id)));
+}
+
+/**
+ * Domyślny preset dla lokalizacji: "Hałas wentylatorów" tam gdzie dostępny,
+ * inaczej pierwszy dostępny preset (np. energia dla Trzebnicy).
+ */
+export function defaultPresetForLayers(layers: GISLayer[]): PresetKey | null {
+  const available = getAvailablePresets(layers).map((p) => p.id);
+  if (available.includes('continuous_noise')) return 'continuous_noise';
+  return available[0] ?? null;
 }
 
 /** Ustawia widoczność warstw zgodnie z wybranym presetem (warstwa DC zawsze widoczna). */

@@ -32,6 +32,12 @@ const PIASECZNO_COORDINATES = [
   { lat: 52.09789465053971, lng: 21.027363234345415, name: 'Szkoła Podstawowa im. Ferdynanda Magellana' }
 ];
 
+const TRZEBNICA_COORDINATES = [
+  { lat: 51.31606738932739, lng: 17.05283850960422, name: 'Domy jednorodzinne' },
+  { lat: 51.31971964376446, lng: 17.058307032967267, name: 'Szpital im. Św. Jadwigi Śląskiej' },
+  { lat: 51.31350737146152, lng: 17.056984085783036, name: 'Szkoła Podstawowa nr 3' }
+];
+
 function domiechowiceNoise(distBoundaryMeters: number): { cont: string; gen: string; temp: string } {
   // Model 1/r^1.5 z odbiciami gruntowymi – źródło 65 dBA w odl. 152,4 m (500 stóp)
   let noiseCont = '~44 dBA (Poniżej normy dziennej, wciąż powyżej nocnej)';
@@ -80,13 +86,26 @@ function piasecznoNoise(distBoundaryMeters: number): { cont: string; gen: string
   return { cont: noiseCont, gen: noiseGen, temp: tempRise };
 }
 
+function trzebnicaNoise(): { cont: string; gen: string; temp: string } {
+  // Brak analiz hałasu i termiki dla Trzebnicy – tylko odległości.
+  return {
+    cont: '— (brak danych – analiza hałasu niedostępna dla tej lokalizacji)',
+    gen: '— (brak danych – analiza hałasu niedostępna dla tej lokalizacji)',
+    temp: '— (brak analizy termicznej dla tej lokalizacji)'
+  };
+}
+
 export function getResidentialBuildings(
   dcPolygon: Feature<Polygon>,
   dcId?: DataCenterKey
 ): ResidentialBuilding[] {
   const dcCenter = turf.centerOfMass(dcPolygon);
   const coords =
-    dcId === 'piaseczno' ? PIASECZNO_COORDINATES : DOMIECHOWICE_COORDINATES;
+    dcId === 'piaseczno'
+      ? PIASECZNO_COORDINATES
+      : dcId === 'trzebnica'
+        ? TRZEBNICA_COORDINATES
+        : DOMIECHOWICE_COORDINATES;
 
   return coords.map((item, index) => {
     const point = turf.point([item.lng, item.lat]);
@@ -103,7 +122,9 @@ export function getResidentialBuildings(
     const { cont, gen, temp } =
       dcId === 'piaseczno'
         ? piasecznoNoise(distBoundaryMeters)
-        : domiechowiceNoise(distBoundaryMeters);
+        : dcId === 'trzebnica'
+          ? trzebnicaNoise()
+          : domiechowiceNoise(distBoundaryMeters);
 
     return {
       id: `res_building_${index + 1}`,

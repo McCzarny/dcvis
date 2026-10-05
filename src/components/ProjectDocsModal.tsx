@@ -308,7 +308,8 @@ const buildCards = (dc: DataCenterProfile): MethodCard[] => {
   }
 
   const w = dc.water;
-  cards.push({
+  if (dc.hasWaterAnalysis) {
+    cards.push({
     id: 'bilans-wodny',
     title: `Bilans wodny – zużycie wody przez centrum danych (${w.powerMW} MW)`,
     icon: Droplets,
@@ -339,7 +340,8 @@ const buildCards = (dc: DataCenterProfile): MethodCard[] => {
       </div>
     ),
     sources: dc.texts.water.docsSources,
-  });
+    });
+  }
 
   const e = dc.energy;
   cards.push({

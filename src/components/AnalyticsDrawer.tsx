@@ -54,17 +54,17 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ dataCenter, is
   const energyRows = buildEnergyChartRows(dataCenter);
 
   // Zakładki zależne od DC: wymuszamy zakładkę dostępną dla aktywnego centrum
-  // (np. bez analizy hałasu i termiki dla Piaseczna zostają Woda i Energia)
+  // (np. dla Trzebnicy bez hałasu, termiki i wody zostaje sama Energia)
   const availableTabs: AnalyticsTab[] = [
     ...(dataCenter.hasNoiseAnalysis ? (['noise'] as AnalyticsTab[]) : []),
     ...(dataCenter.hasThermalAnalysis ? (['thermal'] as AnalyticsTab[]) : []),
-    'water',
+    ...(dataCenter.hasWaterAnalysis ? (['water'] as AnalyticsTab[]) : []),
     'energy',
     ...(dataCenter.hasPowerPlantComparison ? (['blocks'] as AnalyticsTab[]) : [])
   ];
   const tab: AnalyticsTab = availableTabs.includes(activeTab)
     ? activeTab
-    : (availableTabs[0] ?? 'water');
+    : (availableTabs[0] ?? 'energy');
 
   // Obliczanie szumu w warunkach neutralnych oraz przy nocnej inwersji (model 1/r^1.5, +5 dBA od 500 m)
   // Dla Piaseczna: poziomy szacowane (100 m – 2 km), dla Domiechowic – model 1/r^1.5.
@@ -97,13 +97,15 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ dataCenter, is
                   ? 'Wykresy Oddziaływania: Hałas, Mikroklimat, Woda i Energia'
                   : dataCenter.hasThermalAnalysis
                     ? 'Wykresy Oddziaływania: Mikroklimat, Woda i Energia'
-                    : 'Wykresy Oddziaływania: Woda i Energia'}
+                    : dataCenter.hasWaterAnalysis
+                      ? 'Wykresy Oddziaływania: Woda i Energia'
+                      : 'Wykresy Oddziaływania: Energia'}
               </h2>
               <p className="text-xs text-slate-400">
                 Data Center {specs.shortName} – symulacja
                 {dataCenter.hasNoiseAnalysis ? ' spadku hałasu,' : ''}
-                {dataCenter.hasThermalAnalysis ? ' wzrostu temperatury,' : ''} bilansu
-                wodnego i energetycznego
+                {dataCenter.hasThermalAnalysis ? ' wzrostu temperatury,' : ''}
+                {dataCenter.hasWaterAnalysis ? ' bilansu wodnego i energetycznego' : ' bilansu energetycznego'}
                 {dataCenter.hasPowerPlantComparison
                   ? ' oraz skali mocy względem Elektrowni Bełchatów'
                   : ''}
@@ -150,20 +152,22 @@ export const AnalyticsDrawer: React.FC<AnalyticsDrawerProps> = ({ dataCenter, is
               </button>
             )}
 
-            <button
-              onClick={() => setActiveTab('water')}
-              className={`px-4 py-2.5 rounded-t-xl text-xs font-bold flex items-center space-x-2 border-t border-x transition-all ${
-                tab === 'water'
-                  ? 'bg-slate-900 text-cyan-400 border-slate-700 shadow-md'
-                  : 'text-slate-200 border-transparent hover:text-slate-100 bg-slate-800/30'
-              }`}
-            >
-              <Droplets className="w-4 h-4" />
-              <span>
-                Bilans Wodny
-                {waterComparison ? ` (DC vs ${waterComparison.city.name})` : ' (DC)'}
-              </span>
-            </button>
+            {dataCenter.hasWaterAnalysis && (
+              <button
+                onClick={() => setActiveTab('water')}
+                className={`px-4 py-2.5 rounded-t-xl text-xs font-bold flex items-center space-x-2 border-t border-x transition-all ${
+                  tab === 'water'
+                    ? 'bg-slate-900 text-cyan-400 border-slate-700 shadow-md'
+                    : 'text-slate-200 border-transparent hover:text-slate-100 bg-slate-800/30'
+                }`}
+              >
+                <Droplets className="w-4 h-4" />
+                <span>
+                  Bilans Wodny
+                  {waterComparison ? ` (DC vs ${waterComparison.city.name})` : ' (DC)'}
+                </span>
+              </button>
+            )}
 
             <button
               onClick={() => setActiveTab('energy')}

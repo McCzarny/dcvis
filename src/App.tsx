@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { DataCenterKey, GISLayer, MapTileProvider, PresetKey } from './types/gis';
-import { applyPresetToLayers, buildInitialLayers } from './data/layersRegistry';
-import { DataCenterProfile, DEFAULT_DATA_CENTER_ID, getDataCenter } from './data/dataCenters';
+import { applyPresetToLayers, buildInitialLayers, defaultPresetForLayers } from './data/layersRegistry';
+import { DATA_CENTERS, DataCenterProfile, DEFAULT_DATA_CENTER_ID, getDataCenter } from './data/dataCenters';
 import { HeaderNav } from './components/HeaderNav';
 import { MapContainerComponent } from './components/MapContainer';
 import { LayerControlPanel } from './components/LayerControlPanel';
@@ -9,19 +9,73 @@ import { LegendOverlay } from './components/LegendOverlay';
 import { AnalyticsDrawer } from './components/AnalyticsDrawer';
 import { ProjectDocsModal } from './components/ProjectDocsModal';
 
+/**
+ * Odczytuje wybrane centrum danych z adresu strony (np. `#/trzebnica`).
+ * Zwraca null, gdy hash jest pusty lub nieprawidłowy.
+ */
+function dataCenterIdFromHash(): DataCenterKey | null {
+  const match = window.location.hash.match(/^#\/([a-z-]+)\/?$/i);
+  if (!match) return null;
+  const id = match[1].toLowerCase();
+  return DATA_CENTERS.some((dc) => dc.id === id) ? (id as DataCenterKey) : null;
+}
+
 export const App: React.FC = () => {
-  const [dataCenterId, setDataCenterId] = useState<DataCenterKey>(DEFAULT_DATA_CENTER_ID);
-  // Domyślnie od pierwszego renderu: preset "Hałas wentylatorów" (continuous_noise).
-  const [layers, setLayers] = useState<GISLayer[]>(() =>
-    applyPresetToLayers(buildInitialLayers(getDataCenter(DEFAULT_DATA_CENTER_ID)), 'continuous_noise')
+  // Start z adresu URL (link do konkretnego miasta), inaczej domyślne DC.
+  // Wszystkie trzy stany muszą pochodzić z TEGO SAMEGO id (hash nie zmienia
+  // się w trakcie inicjalizacji, więc każde wywołanie zwraca to samo).
+  const [dataCenterId, setDataCenterId] = useState<DataCenterKey>(
+    () => dataCenterIdFromHash() ?? DEFAULT_DATA_CENTER_ID
   );
+  const [layers, setLayers] = useState<GISLayer[]>(() => {
+    const initial = buildInitialLayers(
+      getDataCenter(dataCenterIdFromHash() ?? DEFAULT_DATA_CENTER_ID)
+    );
+    return applyPresetToLayers(initial, defaultPresetForLayers(initial));
+  });
   // Domyślnie podkład Standard (OSM)
   const [tileProvider, setTileProvider] = useState<MapTileProvider>('osm');
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isProjectDocsOpen, setIsProjectDocsOpen] = useState(false);
-  const [activePreset, setActivePreset] = useState<PresetKey | null>('continuous_noise');
+  const [activePreset, setActivePreset] = useState<PresetKey | null>(() =>
+    defaultPresetForLayers(
+      buildInitialLayers(getDataCenter(dataCenterIdFromHash() ?? DEFAULT_DATA_CENTER_ID))
+    )
+  );
 
   const dataCenter: DataCenterProfile = getDataCenter(dataCenterId);
+
+  // Lustrzany ref, żeby listener hashchange nie łapał przestarzałego stanu.
+  const dataCenterIdRef = useRef(dataCenterId);
+  dataCenterIdRef.current = dataCenterId;
+
+  /**
+   * Przełącza lokalizację: przebudowuje warstwy i wraca do domyślnego presetu.
+   */
+  const applyDataCenter = (id: DataCenterKey) => {
+    const nextDataCenter = getDataCenter(id);
+    const nextLayers = buildInitialLayers(nextDataCenter);
+    const nextPreset = defaultPresetForLayers(nextLayers);
+
+    setDataCenterId(id);
+    setActivePreset(nextPreset);
+    setLayers(applyPresetToLayers(nextLayers, nextPreset));
+  };
+
+  // Adres pusty/nieprawidłowy → wpisz bieżące miasto (bez wpisu w historii).
+  // Zmiana hasha (przyciski wstecz/dalej, wklejony link) → przełącz miasto.
+  useEffect(() => {
+    if (!dataCenterIdFromHash()) {
+      window.history.replaceState(null, '', `#/${dataCenterIdRef.current}`);
+    }
+    const handleHashChange = () => {
+      const id = dataCenterIdFromHash();
+      if (id && id !== dataCenterIdRef.current) applyDataCenter(id);
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleToggleLayer = (id: string) => {
     setLayers((prev) =>
@@ -41,19 +95,13 @@ export const App: React.FC = () => {
   };
 
   /**
-   * Zmiana centrum danych: przebudowuje listę warstw i ZAWSZE wraca do
-   * domyślnego presetu "Hałas wentylatorów" (dostępny w każdej lokalizacji).
+   * Zmiana centrum danych z menu: przełącza lokalizację i zapisuje ją w adresie,
+   * żeby linkiem można było podzielić się z kimś (np. `#/trzebnica`).
    */
   const handleChangeDataCenter = (id: DataCenterKey) => {
     if (id === dataCenterId) return;
-
-    const nextDataCenter = getDataCenter(id);
-    const nextLayers = buildInitialLayers(nextDataCenter);
-    const nextPreset: PresetKey = 'continuous_noise';
-
-    setDataCenterId(id);
-    setActivePreset(nextPreset);
-    setLayers(applyPresetToLayers(nextLayers, nextPreset));
+    if (window.location.hash !== `#/${id}`) window.location.hash = `/${id}`;
+    applyDataCenter(id);
   };
 
   return (

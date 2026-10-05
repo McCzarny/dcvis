@@ -111,9 +111,12 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     <div className="mt-1.5 flex flex-wrap gap-1 text-[10px]">
                       <span className={chipClass}>{formatNum(optionSpecs.areaHa, 2)} ha</span>
                       <span className={chipClass}>~{optionSpecs.itPowerMW} MW</span>
-                      <span className={chipClass}>
-                        {optionSpecs.generatorsCountLabel} agregatów ({optionSpecs.generatorPowerMW} MW)
-                      </span>
+                      {optionSpecs.generatorsCountLabel !== undefined &&
+                        optionSpecs.generatorPowerMW !== undefined && (
+                          <span className={chipClass}>
+                            {optionSpecs.generatorsCountLabel} agregatów ({optionSpecs.generatorPowerMW} MW)
+                          </span>
+                        )}
                       {optionSpecs.waterPerDayM3 !== undefined && (
                         <span className={chipClass}>{formatNum(optionSpecs.waterPerDayM3)} m³/dobę</span>
                       )}
@@ -137,13 +140,17 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           <span className="text-slate-400">Moc:</span>
           <span className="font-bold text-amber-400">~{specs.itPowerMW} MW</span>
         </div>
-        <div className="h-3 w-px bg-slate-700" />
-        <div className="flex items-center space-x-1.5">
-          <span className="text-slate-400">Agregaty:</span>
-          <span className="font-bold text-rose-400">
-            {specs.generatorsCountLabel} szt. ({specs.generatorPowerMW} MW)
-          </span>
-        </div>
+        {specs.generatorsCountLabel !== undefined && specs.generatorPowerMW !== undefined && (
+          <>
+            <div className="h-3 w-px bg-slate-700" />
+            <div className="flex items-center space-x-1.5">
+              <span className="text-slate-400">Agregaty:</span>
+              <span className="font-bold text-rose-400">
+                {specs.generatorsCountLabel} szt. ({specs.generatorPowerMW} MW)
+              </span>
+            </div>
+          </>
+        )}
         {specs.waterPerDayM3 !== undefined && (
           <>
             <div className="h-3 w-px bg-slate-700" />

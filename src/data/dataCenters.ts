@@ -3,6 +3,7 @@ import { Feature, Polygon } from 'geojson';
 import { DataCenterKey, DataCenterSpecs } from '../types/gis';
 import { domiechowiceGeoJSON } from './geojson/dataCenter';
 import { piasecznoGeoJSON } from './geojson/piaseczno';
+import { trzebnicaGeoJSON } from './geojson/trzebnica';
 
 /** Średnie bezpowrotne zużycie wody przy produkcji energii elektrycznej (miks PL). */
 export const WATER_FACTOR_L_PER_KWH = 2.5;
@@ -160,6 +161,12 @@ export interface DataCenterProfile {
   hasNoiseAnalysis: boolean;
   /** Czy dostępna jest analiza termiczna (wpływ na temperaturę otoczenia). */
   hasThermalAnalysis: boolean;
+  /**
+   * Czy dostępna jest analiza wodna (warstwa i wykresy bilansu wodnego).
+   * Np. dla Trzebnicy ukryta – znane jest tylko maks. z wniosku (100 m³/dobę),
+   * średnie zużycie nieznane.
+   */
+  hasWaterAnalysis: boolean;
   texts: DataCenterTexts;
 }
 
@@ -375,6 +382,7 @@ const domiechowice: DataCenterProfile = {
   hasPowerPlantComparison: true,
   hasNoiseAnalysis: true,
   hasThermalAnalysis: true,
+  hasWaterAnalysis: true,
   texts: {
     headerSubtitle: 'Geoportal GIS i Analiza Oddziaływania Środowiskowego (Gmina Bełchatów)',
     polygon: {
@@ -530,6 +538,7 @@ const piaseczno: DataCenterProfile = {
   hasPowerPlantComparison: false,
   hasNoiseAnalysis: true,
   hasThermalAnalysis: false,
+  hasWaterAnalysis: true,
   texts: {
     headerSubtitle: 'Geoportal GIS i Analiza Oddziaływania Środowiskowego (Piaseczno, powiat piaseczyński)',
     polygon: {
@@ -573,9 +582,133 @@ const piaseczno: DataCenterProfile = {
 };
 
 // ---------------------------------------------------------------------------
+// Centrum danych 3: Trzebnica (wczesny etap – moc przyłącza = moc IT 1600 MW)
+// Warstwy wody, hałasu, termiki i zabudowań ukryte do uzupełnienia danych.
+// Porównanie z miastem Trzebnica – w przygotowaniu (dane dostarczy użytkownik).
+// ---------------------------------------------------------------------------
+const TRZEBNICA_AREA_HA = round2(turf.area(trzebnicaGeoJSON) / 10_000);
+
+/** Środek ciężkości poligonu Trzebnicy (wyliczony z obrysu). */
+const TRZEBNICA_CENTER: [number, number] = [51.31702, 17.04471];
+
+/** Centrum Trzebnicy (podane przez użytkownika). */
+const TRZEBNICA_CITY_COORDS: [number, number] = [51.310230184200904, 17.063342925478015];
+
+const TRZEBNICA_WATER_COMPARISON: WaterComparison = {
+  city: {
+    name: 'Trzebnica',
+    genitive: 'Trzebnicy',
+    population: 13_674,
+    perCapitaLabel: '46,7 m³/rok',
+    annualM3: 638_576, // 46,7 m³/rok × 13 674 mieszk.
+    annualLabel: '~639 000 m³',
+    centerCoords: TRZEBNICA_CITY_COORDS
+  },
+  ratioVsCity: 54.93, // 35 076 500 m³ (DC, w tym maksimum 100 m³/dobę) / 638 576 m³ (miasto)
+  cityWaterForDcMonths: 0.22
+  // groundwater: brak danych – uzupełnimy w kolejnych iteracjach
+};
+
+const TRZEBNICA_ENERGY_COMPARISON: EnergyComparison = {
+  city: {
+    name: 'Trzebnica',
+    genitive: 'Trzebnicy',
+    population: 13_674,
+    perCapitaKWh: 833.6,
+    perCapitaLabel: '833,6 kWh',
+    annualKWh: 11_398_646, // 833,6 kWh × 13 674 mieszk.
+    annualLabel: '~11 399 000 kWh (~11,4 GWh)',
+    annualGWh: 11.4,
+    centerCoords: TRZEBNICA_CITY_COORDS
+  },
+  ratioVsCity: 1229.62, // 14 016 000 000 kWh (DC) / 11 398 646 kWh (miasto)
+  cityEnergyForDcDays: 0.3 // 11 398 646 / (14 016 000 000 / 365)
+};
+
+// ---------------------------------------------------------------------------
+// Skala kół proporcjonalnych dla Trzebnicy (promień = √(roczna wartość) × K).
+// Środki kół DC (51,31702 N, 17,04471 E) i miasta (51,31023 N, 17,06334 E)
+// leżą ~1500 m od siebie. Stałe K dobrano tak, by suma promieni wynosiła
+// ~1330–1345 m – zapas ~155–170 m, więc koła DC i miasta się nie pokrywają,
+// a pozostaje proporcjonalność pól (√ zużycia).
+// ---------------------------------------------------------------------------
+const TRZEBNICA_WATER_RADIUS_K = 0.2;
+const TRZEBNICA_ENERGY_RADIUS_K = 0.0105;
+
+const trzebnicaWater = makeWaterAnalysis({
+  powerMW: 1600,
+  directPerDayM3: 100,
+  directLabel: 'Bezpośrednie (chłodzenie – MAKSIMUM z wniosku, średnia nieznana)',
+  indirectLabel: 'Pośrednie (produkcja energii elektrycznej – szacunek dla miksu PL)',
+  comparison: TRZEBNICA_WATER_COMPARISON,
+  radiusK: TRZEBNICA_WATER_RADIUS_K
+});
+
+const trzebnicaEnergy = makeEnergyAnalysis({
+  powerMW: 1600,
+  comparison: TRZEBNICA_ENERGY_COMPARISON,
+  radiusK: TRZEBNICA_ENERGY_RADIUS_K
+});
+
+const trzebnica: DataCenterProfile = {
+  id: 'trzebnica',
+  specs: {
+    name: 'DC Trzebnica',
+    shortName: 'Trzebnica',
+    location: 'Trzebnica, powiat trzebnicki',
+    district: 'Dolnośląskie, Polska',
+    areaHa: TRZEBNICA_AREA_HA,
+    itPowerMW: 1600,
+    status: 'Dane w przygotowaniu'
+  },
+  geoJson: trzebnicaGeoJSON,
+  mapCenter: TRZEBNICA_CENTER,
+  mapZoom: 13,
+  water: trzebnicaWater,
+  energy: trzebnicaEnergy,
+  hasPowerPlantComparison: false,
+  hasNoiseAnalysis: false,
+  hasThermalAnalysis: false,
+  hasWaterAnalysis: false,
+  texts: {
+    headerSubtitle: 'Geoportal GIS i Analiza Oddziaływania Środowiskowego (Trzebnica, powiat trzebnicki)',
+    polygon: {
+      shortLabel: 'Centrum Danych',
+      description:
+        'Obrys centrum danych w Trzebnicy wyliczony z podanych współrzędnych (WGS84). ' +
+        'Moc przyłącza ok. 1600 MW (na razie przyjęta jako moc IT). ' +
+        'Agregaty, zużycie wody, hałas i inwestor – w przygotowaniu.',
+      sources: ['Współrzędne obrysu – dane własne', 'Obliczenie powierzchni: turf.js']
+    },
+    water: {
+      sources: ['Dane w przygotowaniu – znane tylko maksimum z wniosku (100 m³/dobę), średnia nieznana'],
+      docsSources: [
+        { label: 'Wniosek inwestora', note: 'Maksymalne zużycie wody: 100 m³/dobę. Średnie zużycie nieznane – warstwa ukryta do uzupełnienia danych.' },
+        { label: 'GUS (stat.gov.pl)', note: 'Zużycie wody na 1 mieszkańca: 46,7 m³/rok (2025). Trzebnica: 13 674 mieszkańców.' },
+        { label: 'Dane w przygotowaniu', note: 'Średnie zużycie wody centrum danych oraz wody podziemne – uzupełnimy w kolejnych iteracjach.' }
+      ]
+    },
+    energy: {
+      sources: [
+        'Dane własne – moc przyłącza (przyjęta jako moc IT): 1600 MW',
+        'GUS (stat.gov.pl) – zużycie energii na mieszkańca: 833,6 kWh (miasta woj. dolnośląskiego, 2024)',
+        'Wikipedia – Trzebnica (liczba mieszkańców: 13 674)',
+        'Założenie: praca ciągła 24/7 przez 365 dni'
+      ],
+      docsSources: [
+        { label: 'Dane własne inwestora', note: 'Moc przyłącza: 1600 MW (na razie przyjęta jako moc IT).' },
+        { label: 'GUS (stat.gov.pl)', note: 'Zużycie energii elektrycznej na 1 mieszkańca: 833,6 kWh (miasta woj. dolnośląskiego, 2024).' },
+        { label: 'Wikipedia – Trzebnica', url: 'https://pl.wikipedia.org/wiki/Trzebnica', note: 'Liczba mieszkańców Trzebnicy: 13 674.' },
+        { label: 'Założenie metodologiczne', note: 'Praca ciągła 24/7 przez 365 dni w roku.' }
+      ]
+    }
+  }
+};
+
+// ---------------------------------------------------------------------------
 // Rejestr
 // ---------------------------------------------------------------------------
-export const DATA_CENTERS: DataCenterProfile[] = [domiechowice, piaseczno];
+export const DATA_CENTERS: DataCenterProfile[] = [domiechowice, piaseczno, trzebnica];
 
 export const DEFAULT_DATA_CENTER_ID: DataCenterKey = 'domiechowice';
 

@@ -258,11 +258,15 @@ export const MapContainerComponent: React.FC<MapContainerProps> = ({
 
   const popupSpecs: { label: string; value: string; className: string }[] = [
     { label: 'Moc:', value: `~${specs.itPowerMW} MW`, className: 'text-sky-700' },
-    {
-      label: 'Agregaty:',
-      value: `${specs.generatorPowerMW} MW (${specs.generatorsCountLabel} szt.)`,
-      className: 'text-rose-700'
-    },
+    ...(specs.generatorPowerMW !== undefined && specs.generatorsCountLabel !== undefined
+      ? [
+          {
+            label: 'Agregaty:',
+            value: `${specs.generatorPowerMW} MW (${specs.generatorsCountLabel} szt.)`,
+            className: 'text-rose-700'
+          }
+        ]
+      : []),
     ...(specs.waterPerDayM3 !== undefined
       ? [
           {

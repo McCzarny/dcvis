@@ -3,7 +3,7 @@ export type LayerCategory = 'inwestycja' | 'srodowisko' | 'akustyka' | 'termika'
 export type MapTileProvider = 'osm' | 'satellite';
 
 /** Klucze centrów danych dostępnych w geoportalu. */
-export type DataCenterKey = 'domiechowice' | 'piaseczno';
+export type DataCenterKey = 'domiechowice' | 'piaseczno' | 'trzebnica';
 
 /** Presety widoczności warstw (radio-buttony w panelu warstw). */
 export type PresetKey =
@@ -53,10 +53,12 @@ export interface DataCenterSpecs {
   plotsCount?: number;
   /** Moc poboru / moc IT centrum danych (odpowiednik 500 MW dla Domiechowic). */
   itPowerMW: number;
-  generatorPowerMW: number;
-  generatorsCount: number;
+  /** Moc agregatów – opcjonalna (np. nieznana na wczesnym etapie, jak w Trzebnicy). */
+  generatorPowerMW?: number;
+  /** Liczba agregatów – opcjonalna. */
+  generatorsCount?: number;
   /** Etykieta do wyświetlania, np. "100+" lub "49". */
-  generatorsCountLabel: string;
+  generatorsCountLabel?: string;
   /** Liczba drycoolerów na dachach (Piaseczno: 112). */
   dryCoolersCount?: number;
   thermalPowerMWt?: number;
